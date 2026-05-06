@@ -2,11 +2,9 @@ import { Application, Container } from 'pixi.js';
 import { SceneManager } from './SceneManager';
 import { LoadingScene } from '../scenes/LoadingScene';
 import { HomeScene } from '../scenes/HomeScene';
-import {
-  loadAssetGroup,
-  loadSequenceGroup,
-  registerRuntimeAssets,
-} from '../assets/assetLoader';
+import { AssetService } from '../services/AssetService';
+import { AudioService } from '../services/AudioService';
+import { AnimationService } from '../services/AnimationService';
 
 export class GameApp {
   private readonly hostElement: HTMLDivElement;
@@ -14,7 +12,13 @@ export class GameApp {
   private readonly rootContainer = new Container();
   private readonly sceneManager = new SceneManager(this.rootContainer);
   private readonly loadingScene = new LoadingScene();
-  private readonly homeScene = new HomeScene();
+  private readonly assetService = new AssetService();
+  private readonly audioService = new AudioService();
+  private readonly animationService = new AnimationService();
+  private readonly homeScene = new HomeScene(
+    this.audioService,
+    this.animationService,
+  );
 
   public constructor(hostElement: HTMLDivElement) {
     this.hostElement = hostElement;
@@ -35,18 +39,14 @@ export class GameApp {
 
     const { width, height } = this.pixiApp.screen;
     this.sceneManager.setScene(this.loadingScene, width, height);
-    registerRuntimeAssets();
+    this.assetService.registerAssets();
 
     this.bindResize();
-    await Promise.all([
-      loadAssetGroup('boot'),
-      loadSequenceGroup('boot'),
-      this.simulateInitialLoad(),
-    ]);
+    await Promise.all([this.assetService.preloadBoot(), this.simulateInitialLoad()]);
 
     const nextSize = this.pixiApp.screen;
     this.sceneManager.setScene(this.homeScene, nextSize.width, nextSize.height);
-    void Promise.all([loadAssetGroup('lazy'), loadSequenceGroup('lazy')]);
+    void this.assetService.preloadLazy();
   }
 
   private bindResize(): void {
