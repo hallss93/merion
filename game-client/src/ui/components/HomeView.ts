@@ -4,6 +4,10 @@ type StartHandler = () => void;
 
 export class HomeView {
   public readonly container = new Container();
+  private readonly layoutRoot = new Container();
+
+  private readonly referenceWidth = 1920;
+  private readonly referenceHeight = 1080;
 
   private readonly backgroundLayer = new Container();
   private readonly mainStructureLayer = new Container();
@@ -60,6 +64,7 @@ export class HomeView {
 
   public constructor() {
     this.container.sortableChildren = true;
+    this.layoutRoot.sortableChildren = true;
     this.backgroundLayer.zIndex = 0;
     this.mainStructureLayer.zIndex = 10;
     this.characterLayer.zIndex = 20;
@@ -85,11 +90,12 @@ export class HomeView {
 
     this.overlayLayer.visible = false;
 
-    this.container.addChild(this.backgroundLayer);
-    this.container.addChild(this.mainStructureLayer);
-    this.container.addChild(this.characterLayer);
-    this.container.addChild(this.uiLayer);
-    this.container.addChild(this.overlayLayer);
+    this.layoutRoot.addChild(this.backgroundLayer);
+    this.layoutRoot.addChild(this.mainStructureLayer);
+    this.layoutRoot.addChild(this.characterLayer);
+    this.layoutRoot.addChild(this.uiLayer);
+    this.layoutRoot.addChild(this.overlayLayer);
+    this.container.addChild(this.layoutRoot);
   }
 
   public onStart(handler: StartHandler): void {
@@ -101,36 +107,49 @@ export class HomeView {
   }
 
   public resize(width: number, height: number): void {
-    const centerX = width * 0.5;
-    const centerY = height * 0.5;
+    const centerX = this.referenceWidth * 0.5;
+    const centerY = this.referenceHeight * 0.5;
+    const scale = this.getResponsiveScale(width, height);
+    const contentWidth = this.referenceWidth * scale;
+    const contentHeight = this.referenceHeight * scale;
+
+    this.layoutRoot.scale.set(scale);
+    this.layoutRoot.position.set(
+      (width - contentWidth) * 0.5,
+      (height - contentHeight) * 0.5,
+    );
 
     this.background.clear();
-    this.background.rect(0, 0, width, height).fill(0x2b1403);
+    this.background
+      .rect(0, 0, this.referenceWidth, this.referenceHeight)
+      .fill(0x2b1403);
 
     this.reelFrame.clear();
     this.reelFrame
-      .roundRect(centerX - 260, centerY - 200, 520, 400, 22)
+      .roundRect(centerX - 430, centerY - 285, 860, 570, 22)
       .fill(0x111111)
       .stroke({ color: 0x8f8f8f, width: 6 });
 
     this.decorPlaceholder.clear();
     this.decorPlaceholder
-      .roundRect(36, 86, 120, 120, 14)
+      .roundRect(92, 150, 180, 160, 14)
       .fill(0x4a2e14)
       .stroke({ color: 0xa56a2f, width: 3 });
 
     this.characterPlaceholder.clear();
     this.characterPlaceholder
-      .roundRect(width - 210, height - 360, 150, 300, 24)
+      .roundRect(this.referenceWidth - 330, this.referenceHeight - 560, 210, 420, 24)
       .fill(0xa55c1b)
       .stroke({ color: 0xffc77a, width: 3 });
 
     this.topBar.clear();
-    this.topBar.rect(0, 0, width, 72).fill({ color: 0x2a2a2a, alpha: 0.92 });
+    this.topBar
+      .rect(0, 0, this.referenceWidth, 90)
+      .fill({ color: 0x2a2a2a, alpha: 0.92 });
 
     this.bottomBar.clear();
     this.bottomBar
-      .rect(0, height - 88, width, 88)
+      .rect(0, this.referenceHeight - 116, this.referenceWidth, 116)
       .fill({ color: 0x1f1f1f, alpha: 0.94 });
 
     this.title.anchor.set(0.5);
@@ -139,24 +158,40 @@ export class HomeView {
     this.popupLabel.anchor.set(0.5);
 
     this.title.x = centerX;
-    this.title.y = 38;
+    this.title.y = 48;
     this.subtitle.x = centerX;
-    this.subtitle.y = height - 58;
+    this.subtitle.y = this.referenceHeight - 76;
 
     const buttonWidth = 180;
     const buttonHeight = 58;
     const buttonX = centerX - buttonWidth * 0.5;
-    const buttonY = height - 44 - buttonHeight * 0.5;
+    const buttonY = this.referenceHeight - 56 - buttonHeight * 0.5;
     this.startButton.clear();
     this.startButton.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 14).fill(
       0xb62b2b,
     );
     this.startLabel.x = centerX;
-    this.startLabel.y = height - 44;
+    this.startLabel.y = this.referenceHeight - 56;
 
     this.popupOverlay.clear();
-    this.popupOverlay.rect(0, 0, width, height).fill({ color: 0x000000, alpha: 0.56 });
+    this.popupOverlay
+      .rect(0, 0, this.referenceWidth, this.referenceHeight)
+      .fill({ color: 0x000000, alpha: 0.56 });
     this.popupLabel.x = centerX;
     this.popupLabel.y = centerY;
+  }
+
+  private getResponsiveScale(width: number, height: number): number {
+    const fitScale = Math.min(width / this.referenceWidth, height / this.referenceHeight);
+
+    if (width <= 900) {
+      return Math.max(0.5, Math.min(fitScale, 0.72));
+    }
+
+    if (width <= 1366) {
+      return Math.max(0.68, Math.min(fitScale, 0.9));
+    }
+
+    return Math.max(0.84, Math.min(fitScale, 1));
   }
 }
