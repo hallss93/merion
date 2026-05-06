@@ -28,7 +28,9 @@ export function registerRuntimeAssets(): void {
   isManifestRegistered = true;
 }
 
-export async function loadAssetGroup(group: 'boot' | 'lazy'): Promise<void> {
+export async function loadAssetGroup(
+  group: 'loading' | 'boot' | 'lazy',
+): Promise<void> {
   const keys = ASSETS_MANIFEST.filter(
     (asset) => asset.loadGroup === group && isRuntimeLoadable(asset),
   ).map((asset) => asset.key);

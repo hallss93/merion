@@ -1,8 +1,9 @@
 export type AssetCategory =
+  | 'ui'
   | 'sequences'
   | 'spine';
 
-export type AssetLoadGroup = 'boot' | 'lazy';
+export type AssetLoadGroup = 'loading' | 'boot' | 'lazy';
 
 export type AssetType = 'image' | 'atlas' | 'spine-json';
 
@@ -12,10 +13,35 @@ export interface AssetItem {
   type: AssetType;
   category: AssetCategory;
   loadGroup: AssetLoadGroup;
-  source: 'sequence' | 'spine';
+  source: 'ui' | 'sequence' | 'spine';
 }
 
 export const ASSETS_MANIFEST: AssetItem[] = [
+  {
+    key: 'preloader_full',
+    path: '/assets/ui/preloader_full.png',
+    type: 'image',
+    category: 'ui',
+    loadGroup: 'loading',
+    source: 'ui',
+  },
+  {
+    key: 'spine_fox_json',
+    path: '/assets/spine/Fox/Fox.json',
+    type: 'spine-json',
+    category: 'spine',
+    loadGroup: 'loading',
+    source: 'spine',
+  },
+  {
+    key: 'spine_fox_atlas',
+    path: '/assets/spine/Fox/Fox.atlas',
+    type: 'atlas',
+    category: 'spine',
+    loadGroup: 'loading',
+    source: 'spine',
+  },
+
   // Key sequence frames (runtime source of truth)
   {
     key: 'sequence_fox_idle_start',

@@ -9,6 +9,10 @@ export class AssetService {
     registerRuntimeAssets();
   }
 
+  public async preloadLoadingScreen(): Promise<void> {
+    await loadAssetGroup('loading');
+  }
+
   public async preloadBoot(): Promise<void> {
     await Promise.all([loadAssetGroup('boot'), loadSequenceGroup('boot')]);
   }

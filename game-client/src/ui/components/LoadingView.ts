@@ -1,9 +1,12 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
+import { Spine } from '@esotericsoftware/spine-pixi-v8';
 
 export class LoadingView {
   public readonly container = new Container();
 
-  private readonly background = new Graphics();
+  private readonly fallbackBackground = new Graphics();
+  private readonly preloaderSprite = new Sprite(Texture.EMPTY);
+  private foxSpine: Spine | null = null;
   private readonly label = new Text({
     text: 'Loading...',
     style: {
@@ -16,8 +19,10 @@ export class LoadingView {
 
   public constructor() {
     this.container.sortableChildren = true;
-    this.container.addChild(this.background);
+    this.container.addChild(this.fallbackBackground);
+    this.container.addChild(this.preloaderSprite);
     this.container.addChild(this.label);
+    this.preloaderSprite.zIndex = 1;
   }
 
   public setVisible(isVisible: boolean): void {
@@ -25,10 +30,76 @@ export class LoadingView {
   }
 
   public resize(width: number, height: number): void {
-    this.background.clear();
-    this.background.rect(0, 0, width, height).fill(0x12081f);
+    this.loadPreloaderTexture();
+    this.fitCover(this.preloaderSprite, width, height);
+    this.ensureFoxSpine();
+    this.positionFox(width, height);
+    this.label.visible = !this.hasPreloader();
+
+    this.fallbackBackground.clear();
+    this.fallbackBackground.rect(0, 0, width, height).fill(0x12081f);
+    this.fallbackBackground.visible = !this.hasPreloader();
+
     this.label.anchor.set(0.5);
     this.label.x = width * 0.5;
     this.label.y = height * 0.5;
+  }
+
+  private ensureFoxSpine(): void {
+    if (this.foxSpine) {
+      return;
+    }
+
+    try {
+      const spine = Spine.from({
+        skeleton: 'spine_fox_json',
+        atlas: 'spine_fox_atlas',
+        autoUpdate: true,
+      });
+      spine.state.setAnimation(0, 'Idle', true);
+      spine.zIndex = 20;
+      this.foxSpine = spine;
+      this.container.addChild(spine);
+    } catch {
+      this.foxSpine = null;
+    }
+  }
+
+  private positionFox(width: number, height: number): void {
+    if (!this.foxSpine) {
+      return;
+    }
+
+    const widthRatio = Math.max(0.5, Math.min(width / 1920, 1));
+    const targetHeight = height * (0.36 + widthRatio * 0.22);
+    const spineBounds = this.foxSpine.getLocalBounds();
+    const safeHeight = Math.max(spineBounds.height, 1);
+    const scale = targetHeight / safeHeight;
+
+    this.foxSpine.scale.set(-scale, scale);
+
+    // Move para a direita em telas estreitas para preservar composição.
+    const foxX = width * (0.86 - widthRatio * 0.07);
+    const foxY = height * (0.65 - widthRatio * 0.07);
+    this.foxSpine.position.set(foxX, foxY);
+  }
+
+  private loadPreloaderTexture(): void {
+    const preloader = Assets.get('preloader_full') as Texture | undefined;
+    if (preloader) {
+      this.preloaderSprite.texture = preloader;
+    }
+  }
+
+  private fitCover(sprite: Sprite, width: number, height: number): void {
+    const baseWidth = sprite.texture.width || 1;
+    const baseHeight = sprite.texture.height || 1;
+    const scale = Math.max(width / baseWidth, height / baseHeight);
+    sprite.scale.set(scale);
+    sprite.position.set((width - baseWidth * scale) * 0.5, (height - baseHeight * scale) * 0.5);
+  }
+
+  private hasPreloader(): boolean {
+    return this.preloaderSprite.texture !== Texture.EMPTY;
   }
 }
