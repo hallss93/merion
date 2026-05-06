@@ -1,17 +1,155 @@
-export const ASSETS_MANIFEST = {
-  staticPreviews: {
-    preloader: '/previews/static previews/preloader.png',
-    mainScene1: '/previews/static previews/main scene 1.png',
-    mainScene2: '/previews/static previews/main scene 2.png',
-    popup1: '/previews/static previews/pop up1.png',
-    popup2: '/previews/static previews/pop up2.png',
-    bigWin: '/previews/static previews/big win.png',
-    megaWin: '/previews/static previews/mega win.png',
-    superMegaWin: '/previews/static previews/super mega win.png',
-    totalWin: '/previews/static previews/total win.png',
+export type AssetCategory =
+  | 'sequences'
+  | 'spine';
+
+export type AssetLoadGroup = 'boot' | 'lazy';
+
+export type AssetType = 'image' | 'atlas' | 'spine-json';
+
+export interface AssetItem {
+  key: string;
+  path: string;
+  type: AssetType;
+  category: AssetCategory;
+  loadGroup: AssetLoadGroup;
+  source: 'sequence' | 'spine';
+}
+
+export const ASSETS_MANIFEST: AssetItem[] = [
+  // Key sequence frames (runtime source of truth)
+  {
+    key: 'sequence_fox_idle_start',
+    path: '/assets/sequences/Character/Idle/Fox-Idle_00.png',
+    type: 'image',
+    category: 'sequences',
+    loadGroup: 'boot',
+    source: 'sequence',
   },
-  animationPreviews: {
-    allFlowVideo: '/previews/aniimaton previews/Preview_all_v2 1.mp4',
-    coinsVideo: '/previews/aniimaton previews/Coins_v1 1.mp4',
+  {
+    key: 'sequence_fox_win_start',
+    path: '/assets/sequences/Character/Win/Win_00.png',
+    type: 'image',
+    category: 'sequences',
+    loadGroup: 'lazy',
+    source: 'sequence',
   },
-} as const;
+  {
+    key: 'sequence_big_win_start',
+    path: '/assets/sequences/Wins/Big_Win/Big_Win_00.png',
+    type: 'image',
+    category: 'sequences',
+    loadGroup: 'lazy',
+    source: 'sequence',
+  },
+  {
+    key: 'sequence_golden_coin_1_start',
+    path: '/assets/sequences/Coins/Golden_coin_1/Golden_coin_1_00.png',
+    type: 'image',
+    category: 'sequences',
+    loadGroup: 'lazy',
+    source: 'sequence',
+  },
+
+  // Spine runtime descriptors
+  {
+    key: 'spine_letters_json',
+    path: '/assets/spine/A_K_J_Q_10/LETTERS.json',
+    type: 'spine-json',
+    category: 'spine',
+    loadGroup: 'lazy',
+    source: 'spine',
+  },
+  {
+    key: 'spine_letters_atlas',
+    path: '/assets/spine/A_K_J_Q_10/LETTERS.atlas',
+    type: 'atlas',
+    category: 'spine',
+    loadGroup: 'lazy',
+    source: 'spine',
+  },
+  {
+    key: 'spine_big_win_atlas',
+    path: '/assets/spine/Big_Win/Big_Win.atlas',
+    type: 'atlas',
+    category: 'spine',
+    loadGroup: 'lazy',
+    source: 'spine',
+  },
+  {
+    key: 'spine_mega_win_json',
+    path: '/assets/spine/Mega_Win/Mega_Win.json',
+    type: 'spine-json',
+    category: 'spine',
+    loadGroup: 'lazy',
+    source: 'spine',
+  },
+  {
+    key: 'spine_super_mega_win_json',
+    path: '/assets/spine/Super_Mega_Win/Super_Mega_Win.json',
+    type: 'spine-json',
+    category: 'spine',
+    loadGroup: 'lazy',
+    source: 'spine',
+  },
+  {
+    key: 'spine_total_win_json',
+    path: '/assets/spine/Total_Win/Total_Win.json',
+    type: 'spine-json',
+    category: 'spine',
+    loadGroup: 'lazy',
+    source: 'spine',
+  },
+];
+
+export const BOOT_ASSET_KEYS = ASSETS_MANIFEST.filter(
+  (item) => item.loadGroup === 'boot',
+).map((item) => item.key);
+
+export interface SequenceDefinition {
+  key: string;
+  basePath: string;
+  prefix: string;
+  startFrame: number;
+  endFrame: number;
+  padLength: number;
+  loadGroup: AssetLoadGroup;
+}
+
+export const SEQUENCE_DEFINITIONS: SequenceDefinition[] = [
+  {
+    key: 'fox_idle',
+    basePath: '/assets/sequences/Character/Idle',
+    prefix: 'Fox-Idle_',
+    startFrame: 0,
+    endFrame: 60,
+    padLength: 2,
+    loadGroup: 'boot',
+  },
+  {
+    key: 'fox_win',
+    basePath: '/assets/sequences/Character/Win',
+    prefix: 'Win_',
+    startFrame: 0,
+    endFrame: 60,
+    padLength: 2,
+    loadGroup: 'lazy',
+  },
+  {
+    key: 'big_win',
+    basePath: '/assets/sequences/Wins/Big_Win',
+    prefix: 'Big_Win_',
+    startFrame: 0,
+    endFrame: 45,
+    padLength: 2,
+    loadGroup: 'lazy',
+  },
+  {
+    key: 'golden_coin_1',
+    basePath: '/assets/sequences/Coins/Golden_coin_1',
+    prefix: 'Golden_coin_1_',
+    startFrame: 0,
+    endFrame: 45,
+    padLength: 2,
+    loadGroup: 'lazy',
+  },
+];
