@@ -63,6 +63,7 @@ export class HomeView {
   });
 
   private startHandler: StartHandler | null = null;
+  private isStartEnabled = true;
 
   public constructor() {
     this.container.sortableChildren = true;
@@ -89,7 +90,13 @@ export class HomeView {
 
     this.startButton.eventMode = 'static';
     this.startButton.cursor = 'pointer';
-    this.startButton.on('pointertap', () => this.startHandler?.());
+    this.startButton.on('pointertap', () => {
+      if (!this.isStartEnabled) {
+        return;
+      }
+
+      this.startHandler?.();
+    });
 
     this.backgroundLayer.addChild(this.background);
     this.mainStructureLayer.addChild(this.reelFrame);
@@ -122,6 +129,25 @@ export class HomeView {
 
   public setVisible(isVisible: boolean): void {
     this.container.visible = isVisible;
+  }
+
+  public setSubtitle(text: string): void {
+    this.subtitle.text = text;
+  }
+
+  public setStartEnabled(enabled: boolean): void {
+    this.isStartEnabled = enabled;
+    this.startButton.alpha = enabled ? 1 : 0.55;
+    this.startLabel.alpha = enabled ? 1 : 0.65;
+    this.startButton.cursor = enabled ? 'pointer' : 'default';
+  }
+
+  public setOverlayVisible(visible: boolean, label?: string): void {
+    if (label) {
+      this.popupLabel.text = label;
+    }
+
+    this.overlayLayer.visible = visible;
   }
 
   public resize(width: number, height: number): void {
