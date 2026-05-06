@@ -1,17 +1,13 @@
 import { AnimatedSprite, Assets, Container, Sprite, Texture } from 'pixi.js';
 import type { IScene } from './types';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-
-const ANIMATION_SPEED_MULTIPLIER = 1.35;
-const SPINE_SPEED_MULTIPLIER = 1.25;
-
-interface SymbolDefinition {
-  folder: string;
-  prefix: string;
-}
-
-const REEL_COLUMNS = 6;
-const REEL_ROWS = 5;
+import {
+  COIN_SYMBOL_DEFINITIONS,
+  GAME_SCENE_CONFIG,
+  OBJECT_SYMBOL_DEFINITIONS,
+  SPINE_WIN_DEFINITIONS,
+  type SymbolDefinition,
+} from '../config/gameSceneConfig';
 
 export class GameScene implements IScene {
   public readonly container = new Container();
@@ -30,58 +26,15 @@ export class GameScene implements IScene {
   private lastHeight = 1080;
   private bigWinTimeoutId: number | null = null;
   private readonly winTimeoutIds: number[] = [];
-  private readonly spineWinDefinitions = [
-    {
-      skeleton: '/assets/spine/Mega_Win/Mega_Win.json',
-      atlas: '/assets/spine/Mega_Win/Mega_Win.atlas',
-      animation: 'Mega_Win',
-    },
-    {
-      skeleton: '/assets/spine/Super_Mega_Win/Super_Mega_Win.json',
-      atlas: '/assets/spine/Super_Mega_Win/Super_Mega_Win.atlas',
-      animation: 'Super_Mega_Win',
-    },
-    {
-      skeleton: '/assets/spine/Total_Win/Total_Win.json',
-      atlas: '/assets/spine/Total_Win/Total_Win.atlas',
-      animation: 'Total_Win',
-    },
-  ] as const;
-  private readonly objectSymbolDefinitions: SymbolDefinition[] = [
-    { folder: 'Bank', prefix: 'Bank_' },
-    { folder: 'Cell', prefix: 'Cell_' },
-    { folder: 'Dynamit', prefix: 'Dynamit_' },
-    { folder: 'Handcuffs', prefix: 'Handcuffs_' },
-    { folder: 'Littera_A', prefix: 'Littera_A_' },
-    { folder: 'Littera_J', prefix: 'Littera_J_' },
-    { folder: 'Littera_K', prefix: 'Littera_K_' },
-    { folder: 'Littera_Q', prefix: 'Littera_Q_' },
-    { folder: 'Number_10', prefix: 'Number_10_' },
-    { folder: 'Safe', prefix: 'Safe_' },
-  ];
-  private readonly coinSymbolDefinitions: SymbolDefinition[] = [
-    { folder: 'Bronze_coin_1', prefix: 'Bronze_coin_1_' },
-    { folder: 'Bronze_coin_2', prefix: 'Bronze_coin_2_' },
-    { folder: 'Bronze_coin_3', prefix: 'Bronze_coin_3_' },
-    { folder: 'Bronze_coin_4', prefix: 'Bronze_coin_4_' },
-    { folder: 'Silver_coin_1', prefix: 'Silver_coin_1_' },
-    { folder: 'Silver_coin_2', prefix: 'Silver_coin_2_' },
-    { folder: 'Silver_coin_3', prefix: 'Silver_coin_3_' },
-    { folder: 'Silver_coin_4', prefix: 'Silver_coin_4_' },
-    { folder: 'Golden_coin_1', prefix: 'Golden_coin_1_' },
-    { folder: 'Golden_coin_2', prefix: 'Golden_coin_2_' },
-    { folder: 'Golden_coin_3', prefix: 'Golden_coin_3_' },
-    { folder: 'Golden_coin_4', prefix: 'Golden_coin_4_' },
-  ];
 
   public constructor() {
     this.container.sortableChildren = true;
     this.container.addChild(this.backgroundSprite);
-    this.reelsContainer.zIndex = 5;
+    this.reelsContainer.zIndex = GAME_SCENE_CONFIG.reel.zIndex;
     this.container.addChild(this.reelsContainer);
-    this.bigWinOverlay.zIndex = 100;
+    this.bigWinOverlay.zIndex = GAME_SCENE_CONFIG.winOverlay.zIndex;
     this.bigWinDim.tint = 0x000000;
-    this.bigWinDim.alpha = 0.6;
+    this.bigWinDim.alpha = GAME_SCENE_CONFIG.winOverlay.dimAlpha;
     this.bigWinOverlay.addChild(this.bigWinDim);
     this.bigWinOverlay.visible = false;
     this.container.addChild(this.bigWinOverlay);
@@ -193,12 +146,12 @@ export class GameScene implements IScene {
     symbolDefinitions: SymbolDefinition[],
     randomizeOrder: boolean,
   ): void {
-    const spriteCount = REEL_COLUMNS * REEL_ROWS;
+    const spriteCount = GAME_SCENE_CONFIG.reel.columns * GAME_SCENE_CONFIG.reel.rows;
     this.ensureReelSpritePool(spriteCount);
 
-    for (let row = 0; row < REEL_ROWS; row += 1) {
-      for (let col = 0; col < REEL_COLUMNS; col += 1) {
-        const spriteIndex = row * REEL_COLUMNS + col;
+    for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
+      for (let col = 0; col < GAME_SCENE_CONFIG.reel.columns; col += 1) {
+        const spriteIndex = row * GAME_SCENE_CONFIG.reel.columns + col;
         const sprite = this.reelSprites[spriteIndex];
         if (!sprite) {
           continue;
@@ -215,8 +168,13 @@ export class GameScene implements IScene {
         sprite.textures = textures;
         sprite.loop = true;
         sprite.animationSpeed =
-          (0.18 + ((row + col) % 4) * 0.02) * ANIMATION_SPEED_MULTIPLIER;
-        sprite.gotoAndPlay((row + col * 3 + Math.floor(Math.random() * 7)) % textures.length);
+          (0.18 + ((row + col) % 4) * 0.02) * GAME_SCENE_CONFIG.animationSpeedMultiplier;
+        sprite.gotoAndPlay(
+          (row +
+            col * 3 +
+            Math.floor(Math.random() * GAME_SCENE_CONFIG.reel.minRandomOffset)) %
+            textures.length,
+        );
       }
     }
   }
@@ -225,7 +183,7 @@ export class GameScene implements IScene {
     while (this.reelSprites.length < targetCount) {
       const sprite = new AnimatedSprite([Texture.EMPTY]);
       sprite.anchor.set(0.5);
-      sprite.zIndex = 6;
+      sprite.zIndex = GAME_SCENE_CONFIG.reel.zIndex;
       this.reelsContainer.addChild(sprite);
       this.reelSprites.push(sprite);
     }
@@ -269,17 +227,17 @@ export class GameScene implements IScene {
     const backgroundY = this.backgroundSprite.y;
 
     // Ratios calibrados com base no layout do `main scene 1.png`.
-    const startX = backgroundX + backgroundWidth * 0.266;
-    const endX = backgroundX + backgroundWidth * 0.715;
-    const startY = backgroundY + backgroundHeight * 0.208;
-    const endY = backgroundY + backgroundHeight * 0.803;
-    const stepX = (endX - startX) / (REEL_COLUMNS - 1);
-    const stepY = (endY - startY) / (REEL_ROWS - 1);
-    const targetCellHeight = backgroundHeight * 0.112;
+    const startX = backgroundX + backgroundWidth * GAME_SCENE_CONFIG.reel.startXRatio;
+    const endX = backgroundX + backgroundWidth * GAME_SCENE_CONFIG.reel.endXRatio;
+    const startY = backgroundY + backgroundHeight * GAME_SCENE_CONFIG.reel.startYRatio;
+    const endY = backgroundY + backgroundHeight * GAME_SCENE_CONFIG.reel.endYRatio;
+    const stepX = (endX - startX) / (GAME_SCENE_CONFIG.reel.columns - 1);
+    const stepY = (endY - startY) / (GAME_SCENE_CONFIG.reel.rows - 1);
+    const targetCellHeight = backgroundHeight * GAME_SCENE_CONFIG.reel.cellHeightRatio;
 
     let index = 0;
-    for (let row = 0; row < REEL_ROWS; row += 1) {
-      for (let col = 0; col < REEL_COLUMNS; col += 1) {
+    for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
+      for (let col = 0; col < GAME_SCENE_CONFIG.reel.columns; col += 1) {
         const sprite = this.reelSprites[index];
         index += 1;
         if (!sprite) {
@@ -301,8 +259,8 @@ export class GameScene implements IScene {
 
   private getActiveSymbolDefinitions(): SymbolDefinition[] {
     return this.isCoinRoute()
-      ? this.coinSymbolDefinitions
-      : this.objectSymbolDefinitions;
+      ? COIN_SYMBOL_DEFINITIONS
+      : OBJECT_SYMBOL_DEFINITIONS;
   }
 
   private isCoinRoute(): boolean {
@@ -321,8 +279,8 @@ export class GameScene implements IScene {
         autoUpdate: true,
       });
       spine.state.setAnimation(0, 'Idle', true);
-      spine.state.timeScale = SPINE_SPEED_MULTIPLIER;
-      spine.zIndex = 10;
+      spine.state.timeScale = GAME_SCENE_CONFIG.spineSpeedMultiplier;
+      spine.zIndex = GAME_SCENE_CONFIG.fox.zIndex;
       this.foxSpine = spine;
       this.container.addChild(spine);
       this.positionFox(this.lastWidth, this.lastHeight);
@@ -337,14 +295,19 @@ export class GameScene implements IScene {
     }
 
     const widthRatio = Math.max(0.5, Math.min(width / 1920, 1));
-    const targetHeight = height * (0.3 + widthRatio * 0.16);
+    const targetHeight =
+      height *
+      (GAME_SCENE_CONFIG.fox.targetHeightBase +
+        widthRatio * GAME_SCENE_CONFIG.fox.targetHeightWidthRatioFactor);
     const spineBounds = this.foxSpine.getLocalBounds();
     const safeHeight = Math.max(spineBounds.height, 1);
     const scale = targetHeight / safeHeight;
 
     this.foxSpine.scale.set(-scale, scale);
-    const foxX = width * (0.92 - widthRatio * 0.05);
-    const foxY = height * (0.73 - widthRatio * 0.06);
+    const foxX =
+      width * (GAME_SCENE_CONFIG.fox.xBase - widthRatio * GAME_SCENE_CONFIG.fox.xWidthRatioFactor);
+    const foxY =
+      height * (GAME_SCENE_CONFIG.fox.yBase - widthRatio * GAME_SCENE_CONFIG.fox.yWidthRatioFactor);
     this.foxSpine.position.set(foxX, foxY);
   }
 
@@ -366,7 +329,8 @@ export class GameScene implements IScene {
     const sprite = new AnimatedSprite(textures);
     sprite.anchor.set(0.5);
     sprite.loop = true;
-    sprite.animationSpeed = 0.28 * ANIMATION_SPEED_MULTIPLIER;
+    sprite.animationSpeed =
+      GAME_SCENE_CONFIG.winOverlay.spriteSpeed * GAME_SCENE_CONFIG.animationSpeedMultiplier;
     sprite.zIndex = 1;
     this.bigWinSprite = sprite;
     this.bigWinOverlay.addChild(sprite);
@@ -385,23 +349,26 @@ export class GameScene implements IScene {
 
     const bounds = winDisplay.getLocalBounds();
     const safeWidth = Math.max(bounds.width, 1);
-    const targetWidth = width * 0.62;
+    const targetWidth = width * GAME_SCENE_CONFIG.winOverlay.targetWidthRatio;
     const scale = targetWidth / safeWidth;
     winDisplay.scale.set(scale);
-    winDisplay.position.set(width * 0.5, height * 0.5);
+    winDisplay.position.set(
+      width * GAME_SCENE_CONFIG.winOverlay.centerXRatio,
+      height * GAME_SCENE_CONFIG.winOverlay.centerYRatio,
+    );
   }
 
   private scheduleWinSequence(): void {
     this.clearAllWinTimers();
     this.bigWinTimeoutId = globalThis.setTimeout(() => {
       this.showWinStage(0);
-    }, 3000);
+    }, GAME_SCENE_CONFIG.winOverlay.stageDelayMs);
     if (this.bigWinTimeoutId !== null) {
       this.winTimeoutIds.push(this.bigWinTimeoutId);
     }
 
-    for (let i = 0; i < this.spineWinDefinitions.length; i += 1) {
-      const delay = 3000 * (i + 2);
+    for (let i = 0; i < SPINE_WIN_DEFINITIONS.length; i += 1) {
+      const delay = GAME_SCENE_CONFIG.winOverlay.stageDelayMs * (i + 2);
       const timeoutId = globalThis.setTimeout(() => {
         void this.showWinStage(i + 1);
       }, delay);
@@ -415,7 +382,7 @@ export class GameScene implements IScene {
       return;
     }
 
-    const definition = this.spineWinDefinitions[stageIndex - 1];
+    const definition = SPINE_WIN_DEFINITIONS[stageIndex - 1];
     if (!definition) {
       return;
     }
@@ -438,7 +405,7 @@ export class GameScene implements IScene {
   }
 
   private async preloadSpineWinAssets(): Promise<void> {
-    const urls = this.spineWinDefinitions.flatMap((definition) => [
+    const urls = SPINE_WIN_DEFINITIONS.flatMap((definition) => [
       definition.skeleton,
       definition.atlas,
     ]);
@@ -469,7 +436,7 @@ export class GameScene implements IScene {
 
     try {
       spineWin.state.setAnimation(0, animation, true);
-      spineWin.state.timeScale = SPINE_SPEED_MULTIPLIER;
+      spineWin.state.timeScale = GAME_SCENE_CONFIG.spineSpeedMultiplier;
     } catch {
       spineWin.destroy();
       return;

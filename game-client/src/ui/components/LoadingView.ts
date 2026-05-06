@@ -1,7 +1,6 @@
 import { Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-
-const SPINE_SPEED_MULTIPLIER = 1.25;
+import { LOADING_VIEW_CONFIG } from '../../config/loadingViewConfig';
 
 export class LoadingView {
   public readonly container = new Container();
@@ -10,11 +9,11 @@ export class LoadingView {
   private readonly preloaderSprite = new Sprite(Texture.EMPTY);
   private foxSpine: Spine | null = null;
   private readonly label = new Text({
-    text: 'Loading...',
+    text: LOADING_VIEW_CONFIG.label.text,
     style: {
       fill: 0xffffff,
       fontFamily: 'Arial',
-      fontSize: 42,
+      fontSize: LOADING_VIEW_CONFIG.label.fontSize,
       fontWeight: '700',
     },
   });
@@ -24,7 +23,7 @@ export class LoadingView {
     this.container.addChild(this.fallbackBackground);
     this.container.addChild(this.preloaderSprite);
     this.container.addChild(this.label);
-    this.preloaderSprite.zIndex = 1;
+    this.preloaderSprite.zIndex = LOADING_VIEW_CONFIG.preloader.zIndex;
   }
 
   public setVisible(isVisible: boolean): void {
@@ -39,7 +38,7 @@ export class LoadingView {
     this.label.visible = !this.hasPreloader();
 
     this.fallbackBackground.clear();
-    this.fallbackBackground.rect(0, 0, width, height).fill(0x12081f);
+    this.fallbackBackground.rect(0, 0, width, height).fill(LOADING_VIEW_CONFIG.fallbackColor);
     this.fallbackBackground.visible = !this.hasPreloader();
 
     this.label.anchor.set(0.5);
@@ -59,8 +58,8 @@ export class LoadingView {
         autoUpdate: true,
       });
       spine.state.setAnimation(0, 'Idle', true);
-      spine.state.timeScale = SPINE_SPEED_MULTIPLIER;
-      spine.zIndex = 20;
+      spine.state.timeScale = LOADING_VIEW_CONFIG.spineSpeedMultiplier;
+      spine.zIndex = LOADING_VIEW_CONFIG.fox.zIndex;
       this.foxSpine = spine;
       this.container.addChild(spine);
     } catch {
@@ -73,8 +72,14 @@ export class LoadingView {
       return;
     }
 
-    const widthRatio = Math.max(0.5, Math.min(width / 1920, 1));
-    const targetHeight = height * (0.36 + widthRatio * 0.22);
+    const widthRatio = Math.max(
+      LOADING_VIEW_CONFIG.fox.minWidthRatio,
+      Math.min(width / 1920, 1),
+    );
+    const targetHeight =
+      height *
+      (LOADING_VIEW_CONFIG.fox.targetHeightBase +
+        widthRatio * LOADING_VIEW_CONFIG.fox.targetHeightWidthRatioFactor);
     const spineBounds = this.foxSpine.getLocalBounds();
     const safeHeight = Math.max(spineBounds.height, 1);
     const scale = targetHeight / safeHeight;
@@ -82,8 +87,10 @@ export class LoadingView {
     this.foxSpine.scale.set(-scale, scale);
 
     // Move para a direita em telas estreitas para preservar composição.
-    const foxX = width * (0.86 - widthRatio * 0.07);
-    const foxY = height * (0.65 - widthRatio * 0.07);
+    const foxX =
+      width * (LOADING_VIEW_CONFIG.fox.xBase - widthRatio * LOADING_VIEW_CONFIG.fox.xWidthRatioFactor);
+    const foxY =
+      height * (LOADING_VIEW_CONFIG.fox.yBase - widthRatio * LOADING_VIEW_CONFIG.fox.yWidthRatioFactor);
     this.foxSpine.position.set(foxX, foxY);
   }
 
