@@ -1,6 +1,54 @@
+import { AnimatedSprite, Assets, type Texture } from 'pixi.js';
+import { SEQUENCE_DEFINITIONS } from '../assets/assetsManifest';
+
+interface SequenceSpriteOptions {
+  loop?: boolean;
+  animationSpeed?: number;
+}
+
 export class AnimationService {
-  public play(animationKey: string): void {
-    void animationKey;
-    // Placeholder centralizado para orquestrar animações por estado.
+  public createSequenceSprite(
+    sequenceKey: string,
+    options: SequenceSpriteOptions = {},
+  ): AnimatedSprite {
+    const sequence = SEQUENCE_DEFINITIONS.find((item) => item.key === sequenceKey);
+    if (!sequence) {
+      throw new Error(`Sequencia nao encontrada: ${sequenceKey}`);
+    }
+
+    const textures = this.getSequenceTextures(sequenceKey);
+    const sprite = new AnimatedSprite(textures);
+    sprite.loop = options.loop ?? true;
+    sprite.animationSpeed = options.animationSpeed ?? 0.45;
+    sprite.anchor.set(0.5);
+
+    return sprite;
+  }
+
+  public play(sprite: AnimatedSprite): void {
+    sprite.gotoAndPlay(0);
+  }
+
+  public stop(sprite: AnimatedSprite): void {
+    sprite.stop();
+  }
+
+  private getSequenceTextures(sequenceKey: string): Texture[] {
+    const sequence = SEQUENCE_DEFINITIONS.find((item) => item.key === sequenceKey);
+    if (!sequence) {
+      return [];
+    }
+
+    const textures: Texture[] = [];
+    for (let frame = sequence.startFrame; frame <= sequence.endFrame; frame += 1) {
+      const frameIndex = String(frame).padStart(sequence.padLength, '0');
+      const path = `${sequence.basePath}/${sequence.prefix}${frameIndex}.png`;
+      const texture = Assets.get(path) as Texture | undefined;
+      if (texture) {
+        textures.push(texture);
+      }
+    }
+
+    return textures;
   }
 }

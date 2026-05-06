@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { AnimatedSprite, Container, Graphics, Text } from 'pixi.js';
 
 type StartHandler = () => void;
 
@@ -64,6 +64,8 @@ export class HomeView {
 
   private startHandler: StartHandler | null = null;
   private isStartEnabled = true;
+  private characterSprite: AnimatedSprite | null = null;
+  private fxSprite: AnimatedSprite | null = null;
 
   public constructor() {
     this.container.sortableChildren = true;
@@ -90,6 +92,23 @@ export class HomeView {
 
     this.startButton.eventMode = 'static';
     this.startButton.cursor = 'pointer';
+    this.startButton.on('pointerover', () => {
+      if (this.isStartEnabled) {
+        this.startButton.tint = 0xff6b6b;
+      }
+    });
+    this.startButton.on('pointerout', () => {
+      this.startButton.tint = 0xffffff;
+      this.startButton.scale.set(1);
+    });
+    this.startButton.on('pointerdown', () => {
+      if (this.isStartEnabled) {
+        this.startButton.scale.set(0.98);
+      }
+    });
+    this.startButton.on('pointerup', () => {
+      this.startButton.scale.set(1);
+    });
     this.startButton.on('pointertap', () => {
       if (!this.isStartEnabled) {
         return;
@@ -140,6 +159,33 @@ export class HomeView {
     this.startButton.alpha = enabled ? 1 : 0.55;
     this.startLabel.alpha = enabled ? 1 : 0.65;
     this.startButton.cursor = enabled ? 'pointer' : 'default';
+    this.startButton.eventMode = enabled ? 'static' : 'none';
+  }
+
+  public setCharacterSprite(sprite: AnimatedSprite | null): void {
+    if (this.characterSprite) {
+      this.characterSprite.removeFromParent();
+    }
+
+    this.characterSprite = sprite;
+    this.characterPlaceholder.visible = !sprite;
+
+    if (sprite) {
+      sprite.zIndex = 40;
+      this.characterLayer.addChild(sprite);
+    }
+  }
+
+  public setFxSprite(sprite: AnimatedSprite | null): void {
+    if (this.fxSprite) {
+      this.fxSprite.removeFromParent();
+    }
+
+    this.fxSprite = sprite;
+    if (sprite) {
+      sprite.zIndex = 2;
+      this.overlayLayer.addChild(sprite);
+    }
   }
 
   public setOverlayVisible(visible: boolean, label?: string): void {
@@ -185,6 +231,13 @@ export class HomeView {
       .roundRect(this.referenceWidth - 330, this.referenceHeight - 560, 210, 420, 24)
       .fill(0xa55c1b)
       .stroke({ color: 0xffc77a, width: 3 });
+    if (this.characterSprite) {
+      this.characterSprite.position.set(
+        this.referenceWidth - 225,
+        this.referenceHeight - 165,
+      );
+      this.characterSprite.scale.set(0.72);
+    }
 
     this.topBar.clear();
     this.topBar
@@ -248,6 +301,10 @@ export class HomeView {
       .fill({ color: 0x000000, alpha: 0.56 });
     this.popupLabel.x = centerX;
     this.popupLabel.y = centerY;
+    if (this.fxSprite) {
+      this.fxSprite.position.set(centerX, centerY);
+      this.fxSprite.scale.set(1.4);
+    }
   }
 
   private getResponsiveScale(width: number, height: number): number {
