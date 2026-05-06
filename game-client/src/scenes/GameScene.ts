@@ -11,12 +11,35 @@ export class GameScene implements IScene {
   public readonly container = new Container();
   private readonly backgroundSprite = new Sprite(Texture.EMPTY);
   private readonly reelsContainer = new Container();
+  private readonly bigWinOverlay = new Container();
+  private readonly bigWinDim = new Sprite(Texture.WHITE);
   private foxSpine: Spine | null = null;
   private readonly reelSprites: AnimatedSprite[] = [];
+  private bigWinSprite: AnimatedSprite | null = null;
+  private activeSpineWin: Spine | null = null;
   private symbolsReady = false;
   private currentSymbolMode: 'objects' | 'coins' | null = null;
   private lastWidth = 1920;
   private lastHeight = 1080;
+  private bigWinTimeoutId: number | null = null;
+  private readonly winTimeoutIds: number[] = [];
+  private readonly spineWinDefinitions = [
+    {
+      skeleton: '/assets/spine/Mega_Win/Mega_Win.json',
+      atlas: '/assets/spine/Mega_Win/Mega_Win.atlas',
+      animation: 'Mega_Win',
+    },
+    {
+      skeleton: '/assets/spine/Super_Mega_Win/Super_Mega_Win.json',
+      atlas: '/assets/spine/Super_Mega_Win/Super_Mega_Win.atlas',
+      animation: 'Super_Mega_Win',
+    },
+    {
+      skeleton: '/assets/spine/Total_Win/Total_Win.json',
+      atlas: '/assets/spine/Total_Win/Total_Win.atlas',
+      animation: 'Total_Win',
+    },
+  ] as const;
   private readonly objectSymbolDefinitions: SymbolDefinition[] = [
     { folder: 'Bank', prefix: 'Bank_' },
     { folder: 'Cell', prefix: 'Cell_' },
@@ -49,12 +72,21 @@ export class GameScene implements IScene {
     this.container.addChild(this.backgroundSprite);
     this.reelsContainer.zIndex = 5;
     this.container.addChild(this.reelsContainer);
+    this.bigWinOverlay.zIndex = 100;
+    this.bigWinDim.tint = 0x000000;
+    this.bigWinDim.alpha = 0.6;
+    this.bigWinOverlay.addChild(this.bigWinDim);
+    this.bigWinOverlay.visible = false;
+    this.container.addChild(this.bigWinOverlay);
   }
 
   public onEnter(): void {
     this.container.visible = true;
     this.ensureFoxSpine();
     void this.ensureReelSymbols();
+    void this.ensureBigWinAnimation();
+    void this.preloadSpineWinAssets();
+    this.scheduleWinSequence();
 
     const texture = Assets.get('main_game_screen') as Texture | undefined;
     if (texture) {
@@ -67,9 +99,18 @@ export class GameScene implements IScene {
   }
 
   public onExit(): void {
+    this.clearAllWinTimers();
     for (const sprite of this.reelSprites) {
       sprite.stop();
     }
+    if (this.bigWinSprite) {
+      this.bigWinSprite.stop();
+    }
+    if (this.activeSpineWin) {
+      this.activeSpineWin.destroy();
+      this.activeSpineWin = null;
+    }
+    this.bigWinOverlay.visible = false;
     this.container.visible = false;
   }
 
@@ -87,6 +128,7 @@ export class GameScene implements IScene {
 
     this.layoutReels();
     this.positionFox(width, height);
+    this.layoutBigWin(width, height);
   }
 
   private async loadMainGameTexture(): Promise<void> {
@@ -127,6 +169,15 @@ export class GameScene implements IScene {
       urls.push(
         `/assets/sequences/${this.getSequenceGroupFolder()}/${symbol.folder}/${symbol.prefix}${frame}.png`,
       );
+    }
+    return urls;
+  }
+
+  private buildBigWinUrls(): string[] {
+    const urls: string[] = [];
+    for (let i = 0; i <= 45; i += 1) {
+      const frame = String(i).padStart(2, '0');
+      urls.push(`/assets/sequences/Wins/Big_Win/Big_Win_${frame}.png`);
     }
     return urls;
   }
@@ -261,5 +312,157 @@ export class GameScene implements IScene {
     const foxX = width * (0.92 - widthRatio * 0.05);
     const foxY = height * (0.73 - widthRatio * 0.06);
     this.foxSpine.position.set(foxX, foxY);
+  }
+
+  private async ensureBigWinAnimation(): Promise<void> {
+    if (this.bigWinSprite) {
+      return;
+    }
+
+    const urls = this.buildBigWinUrls();
+    await Assets.load(urls);
+
+    const textures: Texture[] = urls
+      .map((url) => Assets.get(url) as Texture | undefined)
+      .filter((texture): texture is Texture => Boolean(texture));
+    if (textures.length === 0) {
+      return;
+    }
+
+    const sprite = new AnimatedSprite(textures);
+    sprite.anchor.set(0.5);
+    sprite.loop = true;
+    sprite.animationSpeed = 0.28;
+    sprite.zIndex = 1;
+    this.bigWinSprite = sprite;
+    this.bigWinOverlay.addChild(sprite);
+    this.layoutBigWin(this.lastWidth, this.lastHeight);
+  }
+
+  private layoutBigWin(width: number, height: number): void {
+    this.bigWinDim.width = width;
+    this.bigWinDim.height = height;
+    this.bigWinDim.position.set(0, 0);
+
+    const winDisplay = this.activeSpineWin ?? this.bigWinSprite;
+    if (!winDisplay) {
+      return;
+    }
+
+    const bounds = winDisplay.getLocalBounds();
+    const safeWidth = Math.max(bounds.width, 1);
+    const targetWidth = width * 0.62;
+    const scale = targetWidth / safeWidth;
+    winDisplay.scale.set(scale);
+    winDisplay.position.set(width * 0.5, height * 0.5);
+  }
+
+  private scheduleWinSequence(): void {
+    this.clearAllWinTimers();
+    this.bigWinTimeoutId = globalThis.setTimeout(() => {
+      this.showWinStage(0);
+    }, 3000);
+    if (this.bigWinTimeoutId !== null) {
+      this.winTimeoutIds.push(this.bigWinTimeoutId);
+    }
+
+    for (let i = 0; i < this.spineWinDefinitions.length; i += 1) {
+      const delay = 3000 * (i + 2);
+      const timeoutId = globalThis.setTimeout(() => {
+        void this.showWinStage(i + 1);
+      }, delay);
+      this.winTimeoutIds.push(timeoutId);
+    }
+  }
+
+  private async showWinStage(stageIndex: number): Promise<void> {
+    if (stageIndex === 0) {
+      this.showBigWin();
+      return;
+    }
+
+    const definition = this.spineWinDefinitions[stageIndex - 1];
+    if (!definition) {
+      return;
+    }
+    await this.showSpineWin(
+      definition.skeleton,
+      definition.atlas,
+      definition.animation,
+    );
+  }
+
+  private showBigWin(): void {
+    if (!this.bigWinSprite) {
+      return;
+    }
+    this.disposeActiveSpineWin();
+    this.bigWinOverlay.visible = true;
+    this.bigWinSprite.visible = true;
+    this.bigWinSprite.gotoAndPlay(0);
+    this.layoutBigWin(this.lastWidth, this.lastHeight);
+  }
+
+  private async preloadSpineWinAssets(): Promise<void> {
+    const urls = this.spineWinDefinitions.flatMap((definition) => [
+      definition.skeleton,
+      definition.atlas,
+    ]);
+    await Assets.load(urls);
+  }
+
+  private async showSpineWin(
+    skeleton: string,
+    atlas: string,
+    animation: string,
+  ): Promise<void> {
+    if (this.bigWinSprite) {
+      this.bigWinSprite.stop();
+      this.bigWinSprite.visible = false;
+    }
+    this.disposeActiveSpineWin();
+
+    let spineWin: Spine;
+    try {
+      spineWin = Spine.from({
+        skeleton,
+        atlas,
+        autoUpdate: true,
+      });
+    } catch {
+      return;
+    }
+
+    try {
+      spineWin.state.setAnimation(0, animation, true);
+    } catch {
+      spineWin.destroy();
+      return;
+    }
+
+    spineWin.zIndex = 1;
+    this.activeSpineWin = spineWin;
+    this.bigWinOverlay.visible = true;
+    this.bigWinOverlay.addChild(spineWin);
+    this.layoutBigWin(this.lastWidth, this.lastHeight);
+  }
+
+  private disposeActiveSpineWin(): void {
+    if (!this.activeSpineWin) {
+      return;
+    }
+    this.activeSpineWin.destroy();
+    this.activeSpineWin = null;
+  }
+
+  private clearAllWinTimers(): void {
+    if (this.bigWinTimeoutId !== null) {
+      globalThis.clearTimeout(this.bigWinTimeoutId);
+      this.bigWinTimeoutId = null;
+    }
+    for (const timeoutId of this.winTimeoutIds) {
+      globalThis.clearTimeout(timeoutId);
+    }
+    this.winTimeoutIds.length = 0;
   }
 }
