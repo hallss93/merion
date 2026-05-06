@@ -26,6 +26,7 @@ export class GameApp {
       antialias: true,
       autoDensity: true,
       background: '#000000',
+      backgroundAlpha: 0,
       resolution: Math.min(globalThis.window.devicePixelRatio || 1, 2),
     });
 
