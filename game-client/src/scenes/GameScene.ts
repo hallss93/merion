@@ -10,6 +10,9 @@ interface SymbolDefinition {
   prefix: string;
 }
 
+const REEL_COLUMNS = 6;
+const REEL_ROWS = 5;
+
 export class GameScene implements IScene {
   public readonly container = new Container();
   private readonly backgroundSprite = new Sprite(Texture.EMPTY);
@@ -18,6 +21,7 @@ export class GameScene implements IScene {
   private readonly bigWinDim = new Sprite(Texture.WHITE);
   private foxSpine: Spine | null = null;
   private readonly reelSprites: AnimatedSprite[] = [];
+  private readonly symbolTextureCache = new Map<string, Texture[]>();
   private bigWinSprite: AnimatedSprite | null = null;
   private activeSpineWin: Spine | null = null;
   private symbolsReady = false;
@@ -148,11 +152,11 @@ export class GameScene implements IScene {
         this.buildSymbolUrls(symbol),
       );
       await Assets.load(urls);
-      this.createReelGrid(symbolDefinitions, true);
+      this.createOrUpdateReelGrid(symbolDefinitions, true);
       this.symbolsReady = true;
       this.currentSymbolMode = nextMode;
-    } else if (this.currentSymbolMode !== nextMode || nextMode === 'coins' || nextMode === 'objects') {
-      this.createReelGrid(symbolDefinitions, true);
+    } else if (this.currentSymbolMode !== nextMode) {
+      this.createOrUpdateReelGrid(symbolDefinitions, true);
       this.currentSymbolMode = nextMode;
     }
 
@@ -185,42 +189,69 @@ export class GameScene implements IScene {
     return urls;
   }
 
-  private createReelGrid(
+  private createOrUpdateReelGrid(
     symbolDefinitions: SymbolDefinition[],
     randomizeOrder: boolean,
   ): void {
-    for (const sprite of this.reelSprites) {
-      sprite.stop();
-      sprite.destroy();
-    }
-    this.reelSprites.length = 0;
-    this.reelsContainer.removeChildren();
+    const spriteCount = REEL_COLUMNS * REEL_ROWS;
+    this.ensureReelSpritePool(spriteCount);
 
-    const columns = 6;
-    const rows = 5;
-    for (let row = 0; row < rows; row += 1) {
-      for (let col = 0; col < columns; col += 1) {
+    for (let row = 0; row < REEL_ROWS; row += 1) {
+      for (let col = 0; col < REEL_COLUMNS; col += 1) {
+        const spriteIndex = row * REEL_COLUMNS + col;
+        const sprite = this.reelSprites[spriteIndex];
+        if (!sprite) {
+          continue;
+        }
+
         const symbol = randomizeOrder
           ? symbolDefinitions[Math.floor(Math.random() * symbolDefinitions.length)]
-          : symbolDefinitions[(row * columns + col) % symbolDefinitions.length];
-        const textures = this.buildSymbolUrls(symbol)
-          .map((url) => Assets.get(url) as Texture | undefined)
-          .filter((texture): texture is Texture => Boolean(texture));
+          : symbolDefinitions[spriteIndex % symbolDefinitions.length];
+        const textures = this.getSymbolTextures(symbol);
         if (textures.length === 0) {
           continue;
         }
 
-        const sprite = new AnimatedSprite(textures);
-        sprite.anchor.set(0.5);
+        sprite.textures = textures;
         sprite.loop = true;
         sprite.animationSpeed =
           (0.18 + ((row + col) % 4) * 0.02) * ANIMATION_SPEED_MULTIPLIER;
-        sprite.gotoAndPlay((row + col * 3) % textures.length);
-        sprite.zIndex = 6;
-        this.reelsContainer.addChild(sprite);
-        this.reelSprites.push(sprite);
+        sprite.gotoAndPlay((row + col * 3 + Math.floor(Math.random() * 7)) % textures.length);
       }
     }
+  }
+
+  private ensureReelSpritePool(targetCount: number): void {
+    while (this.reelSprites.length < targetCount) {
+      const sprite = new AnimatedSprite([Texture.EMPTY]);
+      sprite.anchor.set(0.5);
+      sprite.zIndex = 6;
+      this.reelsContainer.addChild(sprite);
+      this.reelSprites.push(sprite);
+    }
+
+    while (this.reelSprites.length > targetCount) {
+      const sprite = this.reelSprites.pop();
+      if (!sprite) {
+        continue;
+      }
+      sprite.stop();
+      sprite.destroy();
+    }
+  }
+
+  private getSymbolTextures(symbol: SymbolDefinition): Texture[] {
+    const cacheKey = `${this.getSequenceGroupFolder()}/${symbol.folder}`;
+    const cached = this.symbolTextureCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const textures = this.buildSymbolUrls(symbol)
+      .map((url) => Assets.get(url) as Texture | undefined)
+      .filter((texture): texture is Texture => Boolean(texture));
+    this.symbolTextureCache.set(cacheKey, textures);
+    return textures;
   }
 
   private layoutReels(): void {
@@ -231,8 +262,6 @@ export class GameScene implements IScene {
       return;
     }
 
-    const columns = 6;
-    const rows = 5;
     const backgroundWidth = this.backgroundSprite.texture.width * this.backgroundSprite.scale.x;
     const backgroundHeight =
       this.backgroundSprite.texture.height * this.backgroundSprite.scale.y;
@@ -244,13 +273,13 @@ export class GameScene implements IScene {
     const endX = backgroundX + backgroundWidth * 0.715;
     const startY = backgroundY + backgroundHeight * 0.208;
     const endY = backgroundY + backgroundHeight * 0.803;
-    const stepX = (endX - startX) / (columns - 1);
-    const stepY = (endY - startY) / (rows - 1);
+    const stepX = (endX - startX) / (REEL_COLUMNS - 1);
+    const stepY = (endY - startY) / (REEL_ROWS - 1);
     const targetCellHeight = backgroundHeight * 0.112;
 
     let index = 0;
-    for (let row = 0; row < rows; row += 1) {
-      for (let col = 0; col < columns; col += 1) {
+    for (let row = 0; row < REEL_ROWS; row += 1) {
+      for (let col = 0; col < REEL_COLUMNS; col += 1) {
         const sprite = this.reelSprites[index];
         index += 1;
         if (!sprite) {

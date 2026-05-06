@@ -38,7 +38,6 @@ export class GameApp {
     this.sceneManager.setScene(this.loadingScene, width, height);
     await Promise.all([
       this.assetService.preloadBoot(),
-      this.assetService.preloadLazy(),
       this.simulateInitialLoad(),
     ]);
 
