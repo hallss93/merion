@@ -49,6 +49,8 @@ export class HomeView {
   });
   private readonly topBar = new Graphics();
   private readonly bottomBar = new Graphics();
+  private readonly titleBackplate = new Graphics();
+  private readonly footerBackplate = new Graphics();
   private readonly popupOverlay = new Graphics();
   private readonly popupLabel = new Text({
     text: 'POPUP / OVERLAY',
@@ -70,6 +72,20 @@ export class HomeView {
     this.characterLayer.zIndex = 20;
     this.uiLayer.zIndex = 30;
     this.overlayLayer.zIndex = 40;
+    this.background.zIndex = 0;
+    this.reelFrame.zIndex = 10;
+    this.decorPlaceholder.zIndex = 20;
+    this.characterPlaceholder.zIndex = 30;
+    this.topBar.zIndex = 0;
+    this.bottomBar.zIndex = 1;
+    this.titleBackplate.zIndex = 2;
+    this.footerBackplate.zIndex = 3;
+    this.title.zIndex = 4;
+    this.subtitle.zIndex = 5;
+    this.startButton.zIndex = 6;
+    this.startLabel.zIndex = 7;
+    this.popupOverlay.zIndex = 0;
+    this.popupLabel.zIndex = 1;
 
     this.startButton.eventMode = 'static';
     this.startButton.cursor = 'pointer';
@@ -81,6 +97,8 @@ export class HomeView {
     this.characterLayer.addChild(this.characterPlaceholder);
     this.uiLayer.addChild(this.topBar);
     this.uiLayer.addChild(this.bottomBar);
+    this.uiLayer.addChild(this.titleBackplate);
+    this.uiLayer.addChild(this.footerBackplate);
     this.uiLayer.addChild(this.title);
     this.uiLayer.addChild(this.subtitle);
     this.uiLayer.addChild(this.startButton);
@@ -152,6 +170,16 @@ export class HomeView {
       .rect(0, this.referenceHeight - 116, this.referenceWidth, 116)
       .fill({ color: 0x1f1f1f, alpha: 0.94 });
 
+    this.titleBackplate.clear();
+    this.titleBackplate
+      .roundRect(centerX - 340, 18, 680, 62, 12)
+      .fill({ color: 0x000000, alpha: 0.35 });
+
+    this.footerBackplate.clear();
+    this.footerBackplate
+      .roundRect(centerX - 430, this.referenceHeight - 106, 860, 68, 14)
+      .fill({ color: 0x000000, alpha: 0.3 });
+
     this.title.anchor.set(0.5);
     this.subtitle.anchor.set(0.5);
     this.startLabel.anchor.set(0.5);
@@ -159,17 +187,32 @@ export class HomeView {
 
     this.title.x = centerX;
     this.title.y = 48;
+    this.title.style.dropShadow = {
+      alpha: 0.55,
+      angle: 1.2,
+      blur: 3,
+      color: 0x000000,
+      distance: 3,
+    };
     this.subtitle.x = centerX;
     this.subtitle.y = this.referenceHeight - 76;
+    this.subtitle.style.dropShadow = {
+      alpha: 0.45,
+      angle: 1.2,
+      blur: 2,
+      color: 0x000000,
+      distance: 2,
+    };
 
     const buttonWidth = 180;
     const buttonHeight = 58;
     const buttonX = centerX - buttonWidth * 0.5;
     const buttonY = this.referenceHeight - 56 - buttonHeight * 0.5;
     this.startButton.clear();
-    this.startButton.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 14).fill(
-      0xb62b2b,
-    );
+    this.startButton
+      .roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 14)
+      .fill(0xb62b2b)
+      .stroke({ color: 0xffd3a1, width: 2 });
     this.startLabel.x = centerX;
     this.startLabel.y = this.referenceHeight - 56;
 
