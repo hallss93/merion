@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #07040f;
+  font-family: Arial, sans-serif;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
