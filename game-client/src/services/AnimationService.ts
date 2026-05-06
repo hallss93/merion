@@ -1,6 +1,8 @@
 import { AnimatedSprite, Assets, type Texture } from 'pixi.js';
 import { SEQUENCE_DEFINITIONS } from '../assets/assetsManifest';
 
+const DEFAULT_SEQUENCE_SPEED = 0.58;
+
 interface SequenceSpriteOptions {
   loop?: boolean;
   animationSpeed?: number;
@@ -19,7 +21,7 @@ export class AnimationService {
     const textures = this.getSequenceTextures(sequenceKey);
     const sprite = new AnimatedSprite(textures);
     sprite.loop = options.loop ?? true;
-    sprite.animationSpeed = options.animationSpeed ?? 0.45;
+    sprite.animationSpeed = options.animationSpeed ?? DEFAULT_SEQUENCE_SPEED;
     sprite.anchor.set(0.5);
 
     return sprite;

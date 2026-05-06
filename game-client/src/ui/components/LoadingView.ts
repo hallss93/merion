@@ -1,6 +1,8 @@
 import { Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 
+const SPINE_SPEED_MULTIPLIER = 1.25;
+
 export class LoadingView {
   public readonly container = new Container();
 
@@ -57,6 +59,7 @@ export class LoadingView {
         autoUpdate: true,
       });
       spine.state.setAnimation(0, 'Idle', true);
+      spine.state.timeScale = SPINE_SPEED_MULTIPLIER;
       spine.zIndex = 20;
       this.foxSpine = spine;
       this.container.addChild(spine);

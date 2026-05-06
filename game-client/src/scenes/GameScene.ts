@@ -2,6 +2,9 @@ import { AnimatedSprite, Assets, Container, Sprite, Texture } from 'pixi.js';
 import type { IScene } from './types';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 
+const ANIMATION_SPEED_MULTIPLIER = 1.35;
+const SPINE_SPEED_MULTIPLIER = 1.25;
+
 interface SymbolDefinition {
   folder: string;
   prefix: string;
@@ -210,7 +213,8 @@ export class GameScene implements IScene {
         const sprite = new AnimatedSprite(textures);
         sprite.anchor.set(0.5);
         sprite.loop = true;
-        sprite.animationSpeed = 0.18 + ((row + col) % 4) * 0.02;
+        sprite.animationSpeed =
+          (0.18 + ((row + col) % 4) * 0.02) * ANIMATION_SPEED_MULTIPLIER;
         sprite.gotoAndPlay((row + col * 3) % textures.length);
         sprite.zIndex = 6;
         this.reelsContainer.addChild(sprite);
@@ -288,6 +292,7 @@ export class GameScene implements IScene {
         autoUpdate: true,
       });
       spine.state.setAnimation(0, 'Idle', true);
+      spine.state.timeScale = SPINE_SPEED_MULTIPLIER;
       spine.zIndex = 10;
       this.foxSpine = spine;
       this.container.addChild(spine);
@@ -332,7 +337,7 @@ export class GameScene implements IScene {
     const sprite = new AnimatedSprite(textures);
     sprite.anchor.set(0.5);
     sprite.loop = true;
-    sprite.animationSpeed = 0.28;
+    sprite.animationSpeed = 0.28 * ANIMATION_SPEED_MULTIPLIER;
     sprite.zIndex = 1;
     this.bigWinSprite = sprite;
     this.bigWinOverlay.addChild(sprite);
@@ -435,6 +440,7 @@ export class GameScene implements IScene {
 
     try {
       spineWin.state.setAnimation(0, animation, true);
+      spineWin.state.timeScale = SPINE_SPEED_MULTIPLIER;
     } catch {
       spineWin.destroy();
       return;
