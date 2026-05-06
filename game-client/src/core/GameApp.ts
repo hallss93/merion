@@ -1,6 +1,7 @@
 import { Application, Container } from 'pixi.js';
 import { SceneManager } from './SceneManager';
 import { LoadingScene } from '../scenes/LoadingScene';
+import { GameScene } from '../scenes/GameScene';
 import { AssetService } from '../services/AssetService';
 
 export class GameApp {
@@ -9,6 +10,7 @@ export class GameApp {
   private readonly rootContainer = new Container();
   private readonly sceneManager = new SceneManager(this.rootContainer);
   private readonly loadingScene = new LoadingScene();
+  private readonly gameScene = new GameScene();
   private readonly assetService = new AssetService();
 
   public constructor(hostElement: HTMLDivElement) {
@@ -39,6 +41,9 @@ export class GameApp {
       this.assetService.preloadLazy(),
       this.simulateInitialLoad(),
     ]);
+
+    const nextSize = this.pixiApp.screen;
+    this.sceneManager.setScene(this.gameScene, nextSize.width, nextSize.height);
   }
 
   private bindResize(): void {
@@ -49,7 +54,7 @@ export class GameApp {
 
   private async simulateInitialLoad(): Promise<void> {
     await new Promise<void>((resolve) => {
-      globalThis.setTimeout(resolve, 10000);
+      globalThis.setTimeout(resolve, 3000);
     });
   }
 }

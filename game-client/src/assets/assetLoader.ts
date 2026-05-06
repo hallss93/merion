@@ -6,17 +6,11 @@ import {
   type SequenceDefinition,
 } from './assetsManifest';
 
-let isManifestRegistered = false;
-
 function isRuntimeLoadable(asset: AssetItem): boolean {
   return asset.path.startsWith('/assets/');
 }
 
 export function registerRuntimeAssets(): void {
-  if (isManifestRegistered) {
-    return;
-  }
-
   for (const asset of ASSETS_MANIFEST) {
     if (!isRuntimeLoadable(asset)) {
       continue;
@@ -24,8 +18,6 @@ export function registerRuntimeAssets(): void {
 
     Assets.add({ alias: asset.key, src: asset.path });
   }
-
-  isManifestRegistered = true;
 }
 
 export async function loadAssetGroup(

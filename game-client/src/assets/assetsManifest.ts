@@ -26,6 +26,14 @@ export const ASSETS_MANIFEST: AssetItem[] = [
     source: 'ui',
   },
   {
+    key: 'main_game_screen',
+    path: '/assets/ui/main_game.png',
+    type: 'image',
+    category: 'ui',
+    loadGroup: 'boot',
+    source: 'ui',
+  },
+  {
     key: 'spine_fox_json',
     path: '/assets/spine/Fox/Fox.json',
     type: 'spine-json',
