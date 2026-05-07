@@ -42,6 +42,7 @@ export class GameScene implements IScene {
   private lastHeight = 1080;
   private bigWinTimeoutId: number | null = null;
   private readonly winTimeoutIds: number[] = [];
+  private readonly spinTimeoutIds: number[] = [];
   private unsubscribeStore: (() => void) | null = null;
 
   public constructor() {
@@ -86,6 +87,7 @@ export class GameScene implements IScene {
 
   public onExit(): void {
     this.clearAllWinTimers();
+    this.clearSpinTimers();
     for (const sprite of this.reelSprites) {
       sprite.stop();
     }
@@ -571,14 +573,10 @@ export class GameScene implements IScene {
     }
 
     this.clearAllWinTimers();
+    this.clearSpinTimers();
     this.bigWinOverlay.visible = false;
     this.slotStore.setPhase('spinning');
     const spinSymbols = this.getActiveSymbolDefinitions();
-    this.createOrUpdateReelGrid(spinSymbols, true);
-    this.layoutReels();
-
-    await this.waitMs(900);
-    this.slotStore.setPhase('evaluating');
 
     const spinResult = this.spinEngine.spin({
       bet: this.slotStore.getCurrentBet(),
@@ -586,6 +584,9 @@ export class GameScene implements IScene {
       rows: GAME_SCENE_CONFIG.reel.rows,
       columns: GAME_SCENE_CONFIG.reel.columns,
     });
+
+    await this.playSpinByColumns(spinSymbols, spinResult.matrix);
+    this.slotStore.setPhase('evaluating');
     this.applySpinResult(spinResult);
 
     if (spinResult.totalWin > 0) {
@@ -622,9 +623,99 @@ export class GameScene implements IScene {
     this.layoutReels();
   }
 
+  private async playSpinByColumns(
+    symbolDefinitions: SymbolDefinition[],
+    finalMatrix: SymbolDefinition[][],
+  ): Promise<void> {
+    const startStaggerMs = 90;
+    const minSpinMs = 900;
+    const stopStaggerMs = 180;
+    const columns = GAME_SCENE_CONFIG.reel.columns;
+
+    for (let col = 0; col < columns; col += 1) {
+      this.startColumnSpin(col, symbolDefinitions);
+      if (col < columns - 1) {
+        await this.waitMs(startStaggerMs);
+      }
+    }
+
+    await this.waitMs(minSpinMs);
+
+    for (let col = 0; col < columns; col += 1) {
+      this.stopColumnWithFinalResult(col, finalMatrix);
+      if (col < columns - 1) {
+        await this.waitMs(stopStaggerMs);
+      }
+    }
+
+    this.layoutReels();
+  }
+
+  private startColumnSpin(
+    column: number,
+    symbolDefinitions: SymbolDefinition[],
+  ): void {
+    for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
+      const sprite = this.getReelSprite(row, column);
+      if (!sprite) {
+        continue;
+      }
+
+      const symbol =
+        symbolDefinitions[Math.floor(Math.random() * symbolDefinitions.length)];
+      const textures = this.getSymbolTextures(symbol);
+      if (textures.length === 0) {
+        continue;
+      }
+
+      sprite.textures = textures;
+      sprite.loop = true;
+      sprite.animationSpeed = 0.62;
+      sprite.gotoAndPlay((row + column) % textures.length);
+    }
+  }
+
+  private stopColumnWithFinalResult(
+    column: number,
+    finalMatrix: SymbolDefinition[][],
+  ): void {
+    for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
+      const sprite = this.getReelSprite(row, column);
+      if (!sprite) {
+        continue;
+      }
+
+      const finalSymbol = finalMatrix[row]?.[column];
+      if (!finalSymbol) {
+        continue;
+      }
+
+      const textures = this.getSymbolTextures(finalSymbol);
+      if (textures.length === 0) {
+        continue;
+      }
+
+      sprite.textures = textures;
+      sprite.animationSpeed = 0.22;
+      sprite.gotoAndStop((row + column) % textures.length);
+    }
+  }
+
+  private getReelSprite(row: number, column: number): AnimatedSprite | null {
+    const index = row * GAME_SCENE_CONFIG.reel.columns + column;
+    return this.reelSprites[index] ?? null;
+  }
+
   private async waitMs(ms: number): Promise<void> {
     await new Promise<void>((resolve) => {
-      globalThis.setTimeout(resolve, ms);
+      const timeoutId = globalThis.setTimeout(() => {
+        const index = this.spinTimeoutIds.indexOf(timeoutId);
+        if (index >= 0) {
+          this.spinTimeoutIds.splice(index, 1);
+        }
+        resolve();
+      }, ms);
+      this.spinTimeoutIds.push(timeoutId);
     });
   }
 
@@ -645,5 +736,12 @@ export class GameScene implements IScene {
     }
     this.createOrUpdateReelGrid(this.getActiveSymbolDefinitions(), true);
     this.layoutReels();
+  }
+
+  private clearSpinTimers(): void {
+    for (const timeoutId of this.spinTimeoutIds) {
+      globalThis.clearTimeout(timeoutId);
+    }
+    this.spinTimeoutIds.length = 0;
   }
 }
