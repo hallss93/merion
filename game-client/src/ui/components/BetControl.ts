@@ -8,6 +8,8 @@ export class BetControl {
   private onIncreaseHandler: (() => void) | null = null;
   private onDecreaseHandler: (() => void) | null = null;
   private assetsReady = false;
+  private static readonly HOVER_SCALE = 1.03;
+  private static readonly PRESSED_SCALE = 0.98;
 
   public constructor() {
     this.controlSprite.blendMode = 'normal';
@@ -18,7 +20,17 @@ export class BetControl {
     this.hitAreaSprite.cursor = 'pointer';
     this.hitAreaSprite.on('pointerover', () => {
       if (this.enabled) {
-        this.controlSprite.scale.set(1.03);
+        this.controlSprite.scale.set(BetControl.HOVER_SCALE);
+      }
+    });
+    this.hitAreaSprite.on('pointerdown', () => {
+      if (this.enabled) {
+        this.controlSprite.scale.set(BetControl.PRESSED_SCALE);
+      }
+    });
+    this.hitAreaSprite.on('pointerup', () => {
+      if (this.enabled) {
+        this.controlSprite.scale.set(BetControl.HOVER_SCALE);
       }
     });
     this.hitAreaSprite.on('pointerout', () => {
@@ -55,6 +67,7 @@ export class BetControl {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
     this.container.cursor = enabled ? 'pointer' : 'default';
+    this.hitAreaSprite.eventMode = enabled ? 'static' : 'none';
   }
 
   public async ensureAssets(): Promise<void> {

@@ -6,6 +6,8 @@ export class ReloadButton {
   private clickHandler: (() => void) | null = null;
   private enabled = true;
   private assetsReady = false;
+  private static readonly HOVER_SCALE = 1.03;
+  private static readonly PRESSED_SCALE = 0.98;
 
   public constructor() {
     this.container.addChild(this.reloadSprite);
@@ -19,7 +21,17 @@ export class ReloadButton {
     });
     this.reloadSprite.on('pointerover', () => {
       if (this.enabled) {
-        this.reloadSprite.scale.set(1.03);
+        this.reloadSprite.scale.set(ReloadButton.HOVER_SCALE);
+      }
+    });
+    this.reloadSprite.on('pointerdown', () => {
+      if (this.enabled) {
+        this.reloadSprite.scale.set(ReloadButton.PRESSED_SCALE);
+      }
+    });
+    this.reloadSprite.on('pointerup', () => {
+      if (this.enabled) {
+        this.reloadSprite.scale.set(ReloadButton.HOVER_SCALE);
       }
     });
     this.reloadSprite.on('pointerout', () => {
@@ -35,6 +47,7 @@ export class ReloadButton {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
     this.reloadSprite.cursor = enabled ? 'pointer' : 'default';
+    this.reloadSprite.eventMode = enabled ? 'static' : 'none';
   }
 
   public async ensureAssets(): Promise<void> {

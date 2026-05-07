@@ -42,6 +42,7 @@ export class GameScene implements IScene {
   private lastWidth = 1920;
   private lastHeight = 1080;
   private readonly spinTimeoutIds: number[] = [];
+  private spinInputLocked = false;
   private unsubscribeStore: (() => void) | null = null;
 
   public constructor() {
@@ -519,7 +520,7 @@ export class GameScene implements IScene {
     this.betControl.setValue(currentBet);
     const canInteract = state.phase === 'idle';
     this.betControl.setEnabled(canInteract);
-    this.spinButton.setEnabled(this.slotStore.canSpin());
+    this.spinButton.setEnabled(this.slotStore.canSpin() && !this.spinInputLocked);
     this.reloadButton.setEnabled(canInteract);
   }
 
@@ -554,7 +555,15 @@ export class GameScene implements IScene {
   }
 
   private async handleSpinClick(): Promise<void> {
+    if (this.spinInputLocked) {
+      return;
+    }
+    this.spinInputLocked = true;
+    this.refreshHudFromState(this.slotStore.getSnapshot());
+
     if (!this.slotStore.startSpin()) {
+      this.spinInputLocked = false;
+      this.refreshHudFromState(this.slotStore.getSnapshot());
       return;
     }
 
@@ -582,6 +591,9 @@ export class GameScene implements IScene {
 
     this.slotStore.setPhase('settling');
     this.slotStore.settleSpin(spinResult.totalWin);
+    await this.waitMs(120);
+    this.spinInputLocked = false;
+    this.refreshHudFromState(this.slotStore.getSnapshot());
   }
 
   private applySpinResult(result: SpinResult): void {

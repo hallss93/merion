@@ -6,6 +6,8 @@ export class SpinButton {
   private clickHandler: (() => void) | null = null;
   private enabled = true;
   private assetsReady = false;
+  private static readonly HOVER_SCALE = 1.03;
+  private static readonly PRESSED_SCALE = 0.98;
 
   public constructor() {
     this.container.addChild(this.spinSprite);
@@ -19,7 +21,17 @@ export class SpinButton {
     });
     this.spinSprite.on('pointerover', () => {
       if (this.enabled) {
-        this.spinSprite.scale.set(1.03);
+        this.spinSprite.scale.set(SpinButton.HOVER_SCALE);
+      }
+    });
+    this.spinSprite.on('pointerdown', () => {
+      if (this.enabled) {
+        this.spinSprite.scale.set(SpinButton.PRESSED_SCALE);
+      }
+    });
+    this.spinSprite.on('pointerup', () => {
+      if (this.enabled) {
+        this.spinSprite.scale.set(SpinButton.HOVER_SCALE);
       }
     });
     this.spinSprite.on('pointerout', () => {
@@ -35,6 +47,7 @@ export class SpinButton {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
     this.spinSprite.cursor = enabled ? 'pointer' : 'default';
+    this.spinSprite.eventMode = enabled ? 'static' : 'none';
   }
 
   public async ensureAssets(): Promise<void> {
