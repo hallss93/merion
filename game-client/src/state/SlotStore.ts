@@ -1,5 +1,9 @@
 import type { SlotPhase, SpinBlockReason } from '../domain/slot/SlotTypes';
-import { SLOT_BET_OPTIONS } from '../domain/slot/SlotRules';
+import {
+  SLOT_BET_OPTIONS,
+  SLOT_DEFAULT_BET_INDEX,
+  SLOT_INITIAL_BALANCE,
+} from '../domain/slot/SlotRules';
 
 export interface SlotState {
   balance: number;
@@ -16,13 +20,14 @@ export class SlotStore {
   private readonly subscribers = new Set<Subscriber>();
 
   public constructor(
-    initialBalance = 0,
+    initialBalance = SLOT_INITIAL_BALANCE,
     betOptions: number[] = [...SLOT_BET_OPTIONS],
   ) {
+    const safeBetIndex = Math.max(0, Math.min(SLOT_DEFAULT_BET_INDEX, betOptions.length - 1));
     this.state = {
       balance: initialBalance,
       betOptions,
-      betIndex: 0,
+      betIndex: safeBetIndex,
       lastWin: 0,
       phase: 'idle',
     };

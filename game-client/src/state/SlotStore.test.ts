@@ -4,9 +4,7 @@ import { SlotStore } from './SlotStore';
 describe('SlotStore', () => {
   it('bloqueia spin por saldo insuficiente', () => {
     const store = new SlotStore(0, [0, 1, 5]);
-    store.increaseBet();
-
-    expect(store.getCurrentBet()).toBe(1);
+    expect(store.getCurrentBet()).toBeGreaterThan(0);
     expect(store.canSpin()).toBe(false);
     expect(store.getSpinBlockReason()).toBe('insufficient_balance');
     expect(store.startSpin()).toBe(false);
