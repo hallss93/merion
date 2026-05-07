@@ -15,13 +15,13 @@ export class SlotStore {
   private readonly subscribers = new Set<Subscriber>();
 
   public constructor(
-    initialBalance = 1000,
-    betOptions = [0.2, 0.5, 1, 2, 5, 10, 20, 50, 100],
+    initialBalance = 0,
+    betOptions = [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 999],
   ) {
     this.state = {
       balance: initialBalance,
       betOptions,
-      betIndex: 2,
+      betIndex: 0,
       lastWin: 0,
       phase: 'idle',
     };

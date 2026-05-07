@@ -1,29 +1,29 @@
 import { Assets, Container, Sprite, Texture } from 'pixi.js';
 
-export class SpinButton {
+export class ReloadButton {
   public readonly container = new Container();
-  private readonly spinSprite = new Sprite(Texture.EMPTY);
+  private readonly reloadSprite = new Sprite(Texture.EMPTY);
   private clickHandler: (() => void) | null = null;
   private enabled = true;
   private assetsReady = false;
 
   public constructor() {
-    this.container.addChild(this.spinSprite);
-    this.spinSprite.eventMode = 'static';
-    this.spinSprite.cursor = 'pointer';
-    this.spinSprite.on('pointertap', () => {
+    this.container.addChild(this.reloadSprite);
+    this.reloadSprite.eventMode = 'static';
+    this.reloadSprite.cursor = 'pointer';
+    this.reloadSprite.on('pointertap', () => {
       if (!this.enabled) {
         return;
       }
       this.clickHandler?.();
     });
-    this.spinSprite.on('pointerover', () => {
+    this.reloadSprite.on('pointerover', () => {
       if (this.enabled) {
-        this.spinSprite.scale.set(1.03);
+        this.reloadSprite.scale.set(1.03);
       }
     });
-    this.spinSprite.on('pointerout', () => {
-      this.spinSprite.scale.set(1);
+    this.reloadSprite.on('pointerout', () => {
+      this.reloadSprite.scale.set(1);
     });
   }
 
@@ -34,22 +34,23 @@ export class SpinButton {
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
-    this.spinSprite.cursor = enabled ? 'pointer' : 'default';
+    this.reloadSprite.cursor = enabled ? 'pointer' : 'default';
   }
 
   public async ensureAssets(): Promise<void> {
     if (this.assetsReady) {
       return;
     }
-    await Assets.load('/assets/ui/hud/spin.png');
-    this.spinSprite.texture = (Assets.get('/assets/ui/hud/spin.png') as Texture | undefined) ?? Texture.EMPTY;
+    await Assets.load('/assets/ui/hud/reload.png');
+    this.reloadSprite.texture =
+      (Assets.get('/assets/ui/hud/reload.png') as Texture | undefined) ?? Texture.EMPTY;
     this.assetsReady = true;
   }
 
   public getSize(): { width: number; height: number } {
     return {
-      width: this.spinSprite.width,
-      height: this.spinSprite.height,
+      width: this.reloadSprite.width,
+      height: this.reloadSprite.height,
     };
   }
 }

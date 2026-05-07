@@ -27,7 +27,7 @@ export const ASSETS_MANIFEST: AssetItem[] = [
   },
   {
     key: 'main_game_screen',
-    path: '/assets/ui/main_game.png',
+    path: '/assets/ui/main_game_1.png',
     type: 'image',
     category: 'ui',
     loadGroup: 'boot',

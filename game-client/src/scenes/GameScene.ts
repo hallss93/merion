@@ -13,6 +13,7 @@ import { SpinEngine } from '../domain/slot/SpinEngine';
 import { SpinButton } from '../ui/components/SpinButton';
 import { BetControl } from '../ui/components/BetControl';
 import { BalancePanel } from '../ui/components/BalancePanel';
+import { ReloadButton } from '../ui/components/ReloadButton';
 import type { SlotState } from '../state/SlotStore';
 import type { SpinResult } from '../domain/slot/SlotTypes';
 
@@ -21,11 +22,13 @@ export class GameScene implements IScene {
   private readonly backgroundSprite = new Sprite(Texture.EMPTY);
   private readonly reelsContainer = new Container();
   private readonly hudContainer = new Container();
+  private readonly mainButtonContainer = new Container();
   private readonly bigWinOverlay = new Container();
   private readonly bigWinDim = new Sprite(Texture.WHITE);
   private readonly slotStore = new SlotStore();
   private readonly spinEngine = new SpinEngine();
   private readonly spinButton = new SpinButton();
+  private readonly reloadButton = new ReloadButton();
   private readonly betControl = new BetControl();
   private readonly balancePanel = new BalancePanel();
   private foxSpine: Spine | null = null;
@@ -46,8 +49,11 @@ export class GameScene implements IScene {
     this.container.addChild(this.backgroundSprite);
     this.reelsContainer.zIndex = GAME_SCENE_CONFIG.reel.zIndex;
     this.container.addChild(this.reelsContainer);
-    this.hudContainer.zIndex = 120;
+    this.hudContainer.sortableChildren = true;
+    this.hudContainer.zIndex = 10000;
     this.container.addChild(this.hudContainer);
+    this.mainButtonContainer.sortableChildren = true;
+    this.mainButtonContainer.zIndex = 3;
     this.bigWinOverlay.zIndex = GAME_SCENE_CONFIG.winOverlay.zIndex;
     this.bigWinDim.tint = 0x000000;
     this.bigWinDim.alpha = GAME_SCENE_CONFIG.winOverlay.dimAlpha;
@@ -60,6 +66,8 @@ export class GameScene implements IScene {
 
   public onEnter(): void {
     this.container.visible = true;
+    this.hudContainer.visible = true;
+    void this.ensureHudAssets();
     this.ensureFoxSpine();
     void this.ensureReelSymbols();
     void this.ensureBigWinAnimation();
@@ -490,10 +498,15 @@ export class GameScene implements IScene {
 
   private setupHud(): void {
     this.hudContainer.addChild(this.balancePanel.container);
-    this.hudContainer.addChild(this.betControl.container);
-    this.hudContainer.addChild(this.spinButton.container);
+    this.hudContainer.addChild(this.mainButtonContainer);
+    this.mainButtonContainer.addChild(this.betControl.container);
+    this.mainButtonContainer.addChild(this.reloadButton.container);
+    this.mainButtonContainer.addChild(this.spinButton.container);
     this.spinButton.onClick(() => {
       void this.handleSpinClick();
+    });
+    this.reloadButton.onClick(() => {
+      this.handleReloadClick();
     });
     this.betControl.onIncrease(() => {
       this.slotStore.increaseBet();
@@ -519,12 +532,37 @@ export class GameScene implements IScene {
     const canInteract = state.phase === 'idle';
     this.betControl.setEnabled(canInteract);
     this.spinButton.setEnabled(this.slotStore.canSpin());
+    this.reloadButton.setEnabled(canInteract);
   }
 
   private layoutHud(width: number, height: number): void {
-    this.balancePanel.container.position.set(width * 0.5 - 265, height - 92);
-    this.betControl.container.position.set(width * 0.5 - 130, height - 165);
-    this.spinButton.container.position.set(width * 0.5 + 150, height - 165);
+    this.balancePanel.setGroupScale(0.9);
+    const balanceSize = this.balancePanel.getSize();
+    const betSize = this.betControl.getSize();
+    const reloadSize = this.reloadButton.getSize();
+    const spinSize = this.spinButton.getSize();
+    const overlapBetSpin = Math.round(spinSize.width * 0.32);
+    const overlapSpinReload = Math.round(reloadSize.width * 0.3);
+    const groupWidth =
+      betSize.width + spinSize.width + reloadSize.width - overlapBetSpin - overlapSpinReload;
+    const groupHeight = Math.max(betSize.height, reloadSize.height, spinSize.height);
+    const bottomY = height - Math.max(balanceSize.height, groupHeight) - 18;
+    const alignedY = bottomY + 62;
+
+    this.balancePanel.container.position.set(
+      width * 0.5 - balanceSize.width * 0.5 - 120,
+      alignedY,
+    );
+    this.mainButtonContainer.scale.set(0.88);
+    const scaledGroupWidth = groupWidth * this.mainButtonContainer.scale.x;
+    const mainGroupX = width - width * 0.11 - scaledGroupWidth;
+    this.mainButtonContainer.position.set(mainGroupX, alignedY);
+    this.betControl.container.position.set(0, 0);
+    this.spinButton.container.position.set(betSize.width - overlapBetSpin, 0);
+    this.reloadButton.container.position.set(
+      betSize.width + spinSize.width - overlapBetSpin - overlapSpinReload,
+      0,
+    );
   }
 
   private async handleSpinClick(): Promise<void> {
@@ -588,5 +626,24 @@ export class GameScene implements IScene {
     await new Promise<void>((resolve) => {
       globalThis.setTimeout(resolve, ms);
     });
+  }
+
+  private async ensureHudAssets(): Promise<void> {
+    await Promise.all([
+      this.balancePanel.ensureAssets(),
+      this.betControl.ensureAssets(),
+      this.reloadButton.ensureAssets(),
+      this.spinButton.ensureAssets(),
+    ]);
+    this.layoutHud(this.lastWidth, this.lastHeight);
+    this.refreshHudFromState(this.slotStore.getSnapshot());
+  }
+
+  private handleReloadClick(): void {
+    if (this.slotStore.getSnapshot().phase !== 'idle') {
+      return;
+    }
+    this.createOrUpdateReelGrid(this.getActiveSymbolDefinitions(), true);
+    this.layoutReels();
   }
 }
