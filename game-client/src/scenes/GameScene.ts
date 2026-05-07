@@ -791,6 +791,9 @@ export class GameScene implements IScene {
     if (totalWin >= amountThresholds.bigWin) {
       return 0;
     }
+    if (totalWin > 0) {
+      return 0;
+    }
     return null;
   }
 
