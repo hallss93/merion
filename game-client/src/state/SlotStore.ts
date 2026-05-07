@@ -1,4 +1,5 @@
-import type { SlotPhase } from '../domain/slot/SlotTypes';
+import type { SlotPhase, SpinBlockReason } from '../domain/slot/SlotTypes';
+import { SLOT_BET_OPTIONS } from '../domain/slot/SlotRules';
 
 export interface SlotState {
   balance: number;
@@ -16,7 +17,7 @@ export class SlotStore {
 
   public constructor(
     initialBalance = 0,
-    betOptions = [0, 1, 2, 5, 10, 20, 50, 100, 200, 500, 999],
+    betOptions: number[] = [...SLOT_BET_OPTIONS],
   ) {
     this.state = {
       balance: initialBalance,
@@ -36,7 +37,17 @@ export class SlotStore {
   }
 
   public canSpin(): boolean {
-    return this.state.phase === 'idle' && this.state.balance >= this.getCurrentBet();
+    return this.getSpinBlockReason() === null;
+  }
+
+  public getSpinBlockReason(): SpinBlockReason {
+    if (this.state.phase !== 'idle') {
+      return 'not_idle';
+    }
+    if (this.state.balance < this.getCurrentBet()) {
+      return 'insufficient_balance';
+    }
+    return null;
   }
 
   public increaseBet(): void {

@@ -1,4 +1,6 @@
 export class Rng {
+  private mockCounter = 0;
+
   public int(min: number, max: number): number {
     if (max < min) {
       return min;
@@ -11,6 +13,15 @@ export class Rng {
       throw new Error('Rng.pick recebeu lista vazia.');
     }
     const index = this.int(0, items.length - 1);
+    return items[index];
+  }
+
+  public pickMock<T>(items: T[]): T {
+    if (items.length === 0) {
+      throw new Error('Rng.pickMock recebeu lista vazia.');
+    }
+    const index = this.mockCounter % items.length;
+    this.mockCounter += 1;
     return items[index];
   }
 }

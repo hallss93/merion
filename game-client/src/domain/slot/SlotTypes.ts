@@ -7,6 +7,12 @@ export type SlotPhase =
   | 'showingWin'
   | 'settling';
 
+export type RngMode = 'fair' | 'mock';
+
+export type SpinBlockReason = 'not_idle' | 'insufficient_balance' | null;
+
+export type PaylinePattern = number[];
+
 export interface LineWin {
   lineId: number;
   symbol: string;

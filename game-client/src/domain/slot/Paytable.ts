@@ -1,4 +1,4 @@
-import type { PaytableRule } from './SlotTypes';
+import type { PaylinePattern, PaytableRule } from './SlotTypes';
 
 export const DEFAULT_PAYTABLE: PaytableRule[] = [
   { symbol: 'Golden_coin_4', payouts: { 3: 2, 4: 4, 5: 8, 6: 12 } },
@@ -15,6 +15,20 @@ export const DEFAULT_PAYTABLE: PaytableRule[] = [
   { symbol: 'Bronze_coin_1', payouts: { 3: 0.3, 4: 0.6, 5: 1.2, 6: 2 } },
   { symbol: 'Safe', payouts: { 3: 1, 4: 1.8, 5: 3, 6: 4 } },
   { symbol: 'Bank', payouts: { 3: 1.1, 4: 2, 5: 3.2, 6: 4.2 } },
+];
+
+// 10 paylines oficiais para grade 6x5 (linhas 0-4).
+export const OFFICIAL_PAYLINES: PaylinePattern[] = [
+  [0, 0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 1, 1],
+  [2, 2, 2, 2, 2, 2],
+  [3, 3, 3, 3, 3, 3],
+  [4, 4, 4, 4, 4, 4],
+  [0, 1, 2, 2, 1, 0],
+  [4, 3, 2, 2, 3, 4],
+  [1, 2, 3, 3, 2, 1],
+  [3, 2, 1, 1, 2, 3],
+  [0, 0, 1, 2, 3, 4],
 ];
 
 export function getMultiplierForSymbol(

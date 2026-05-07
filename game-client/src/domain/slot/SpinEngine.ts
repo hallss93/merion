@@ -1,7 +1,8 @@
 import type { SymbolDefinition } from '../../config/gameSceneConfig';
-import { getMultiplierForSymbol } from './Paytable';
+import { getMultiplierForSymbol, OFFICIAL_PAYLINES } from './Paytable';
 import { Rng } from './Rng';
-import type { LineWin, SpinResult } from './SlotTypes';
+import type { LineWin, RngMode, SpinResult } from './SlotTypes';
+import { DEFAULT_RNG_MODE } from './SlotRules';
 
 interface SpinParams {
   bet: number;
@@ -12,6 +13,11 @@ interface SpinParams {
 
 export class SpinEngine {
   private readonly rng = new Rng();
+  private readonly rngMode: RngMode;
+
+  public constructor(rngMode: RngMode = DEFAULT_RNG_MODE) {
+    this.rngMode = rngMode;
+  }
 
   public spin(params: SpinParams): SpinResult {
     const matrix = this.buildMatrix(params.symbols, params.rows, params.columns);
@@ -36,7 +42,11 @@ export class SpinEngine {
     for (let row = 0; row < rows; row += 1) {
       const rowSymbols: SymbolDefinition[] = [];
       for (let column = 0; column < columns; column += 1) {
-        rowSymbols.push(this.rng.pick(symbols));
+        rowSymbols.push(
+          this.rngMode === 'mock'
+            ? this.rng.pickMock(symbols)
+            : this.rng.pick(symbols),
+        );
       }
       matrix.push(rowSymbols);
     }
@@ -46,18 +56,21 @@ export class SpinEngine {
   private evaluateRows(matrix: SymbolDefinition[][], bet: number): LineWin[] {
     const wins: LineWin[] = [];
 
-    for (let row = 0; row < matrix.length; row += 1) {
-      const rowData = matrix[row];
-      if (!rowData || rowData.length === 0) {
+    for (let lineId = 0; lineId < OFFICIAL_PAYLINES.length; lineId += 1) {
+      const pattern = OFFICIAL_PAYLINES[lineId];
+      const firstRow = pattern[0];
+      const firstSymbol = matrix[firstRow]?.[0];
+      if (!firstSymbol) {
         continue;
       }
 
-      const first = rowData[0];
-      const symbolName = first.folder;
+      const symbolName = firstSymbol.folder;
       let count = 1;
 
-      for (let col = 1; col < rowData.length; col += 1) {
-        if (rowData[col].folder !== symbolName) {
+      for (let col = 1; col < pattern.length; col += 1) {
+        const row = pattern[col];
+        const symbol = matrix[row]?.[col];
+        if (!symbol || symbol.folder !== symbolName) {
           break;
         }
         count += 1;
@@ -69,7 +82,7 @@ export class SpinEngine {
       }
 
       wins.push({
-        lineId: row,
+        lineId,
         symbol: symbolName,
         count,
         multiplier,
