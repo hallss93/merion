@@ -590,7 +590,7 @@ export class GameScene implements IScene {
 
     if (spinResult.totalWin > 0) {
       this.slotStore.setPhase('showingWin');
-      await this.playWinFeedback(spinResult.totalMultiplier);
+      await this.playWinFeedback(spinResult.totalWin);
     }
 
     this.slotStore.setPhase('settling');
@@ -746,8 +746,8 @@ export class GameScene implements IScene {
     this.spinTimeoutIds.length = 0;
   }
 
-  private async playWinFeedback(totalMultiplier: number): Promise<void> {
-    const stageIndices = this.getWinStageIndices(totalMultiplier);
+  private async playWinFeedback(totalWin: number): Promise<void> {
+    const stageIndices = this.getWinStageIndices(totalWin);
     if (stageIndices.length === 0) {
       return;
     }
@@ -761,7 +761,7 @@ export class GameScene implements IScene {
       if (this.shouldSkipWinFeedback) {
         break;
       }
-      await this.waitMs(GAME_SCENE_CONFIG.winOverlay.stageDelayMs);
+      await this.waitMs(GAME_SCENE_CONFIG.winOverlay.stageToTotalDelayMs);
     }
 
     this.bigWinOverlay.visible = false;
@@ -772,21 +772,26 @@ export class GameScene implements IScene {
     }
   }
 
-  private getWinStageIndices(totalMultiplier: number): number[] {
-    const { thresholds } = GAME_SCENE_CONFIG.winOverlay;
-    if (totalMultiplier >= thresholds.totalWin) {
-      return [0, 1, 2, 3];
+  private getWinStageIndices(totalWin: number): number[] {
+    const primaryStageIndex = this.getPrimaryWinStageIndex(totalWin);
+    if (primaryStageIndex === null) {
+      return [];
     }
-    if (totalMultiplier >= thresholds.superMegaWin) {
-      return [0, 1, 2];
+    return [primaryStageIndex, 3];
+  }
+
+  private getPrimaryWinStageIndex(totalWin: number): 0 | 1 | 2 | null {
+    const { amountThresholds } = GAME_SCENE_CONFIG.winOverlay;
+    if (totalWin >= amountThresholds.superMegaWin) {
+      return 2;
     }
-    if (totalMultiplier >= thresholds.megaWin) {
-      return [0, 1];
+    if (totalWin >= amountThresholds.megaWin) {
+      return 1;
     }
-    if (totalMultiplier >= thresholds.bigWin) {
-      return [0];
+    if (totalWin >= amountThresholds.bigWin) {
+      return 0;
     }
-    return [];
+    return null;
   }
 
   private logRound(payload: { bet: number; result: SpinResult }): void {

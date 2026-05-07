@@ -38,13 +38,12 @@ export const GAME_SCENE_CONFIG = {
     targetWidthRatio: 0.62,
     centerXRatio: 0.5,
     centerYRatio: 0.5,
-    stageDelayMs: 3000,
+    stageToTotalDelayMs: 5000,
     spriteSpeed: 0.28,
-    thresholds: {
-      bigWin: 5,
-      megaWin: 15,
-      superMegaWin: 30,
-      totalWin: 60,
+    amountThresholds: {
+      bigWin: 100,
+      megaWin: 1000,
+      superMegaWin: 5000,
     },
   },
 } as const;
