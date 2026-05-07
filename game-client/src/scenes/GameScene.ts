@@ -36,12 +36,11 @@ export class GameScene implements IScene {
   private readonly symbolTextureCache = new Map<string, Texture[]>();
   private bigWinSprite: AnimatedSprite | null = null;
   private activeSpineWin: Spine | null = null;
+  private shouldSkipWinFeedback = false;
   private symbolsReady = false;
   private currentSymbolMode: 'objects' | 'coins' | null = null;
   private lastWidth = 1920;
   private lastHeight = 1080;
-  private bigWinTimeoutId: number | null = null;
-  private readonly winTimeoutIds: number[] = [];
   private readonly spinTimeoutIds: number[] = [];
   private unsubscribeStore: (() => void) | null = null;
 
@@ -60,6 +59,12 @@ export class GameScene implements IScene {
     this.bigWinDim.alpha = GAME_SCENE_CONFIG.winOverlay.dimAlpha;
     this.bigWinOverlay.addChild(this.bigWinDim);
     this.bigWinOverlay.visible = false;
+    this.bigWinOverlay.eventMode = 'static';
+    this.bigWinOverlay.on('pointertap', () => {
+      if (this.slotStore.getSnapshot().phase === 'showingWin') {
+        this.shouldSkipWinFeedback = true;
+      }
+    });
     this.container.addChild(this.bigWinOverlay);
     this.setupHud();
     this.bindStore();
@@ -388,24 +393,6 @@ export class GameScene implements IScene {
     );
   }
 
-  private scheduleWinSequence(): void {
-    this.clearAllWinTimers();
-    this.bigWinTimeoutId = globalThis.setTimeout(() => {
-      this.showWinStage(0);
-    }, GAME_SCENE_CONFIG.winOverlay.stageDelayMs);
-    if (this.bigWinTimeoutId !== null) {
-      this.winTimeoutIds.push(this.bigWinTimeoutId);
-    }
-
-    for (let i = 0; i < SPINE_WIN_DEFINITIONS.length; i += 1) {
-      const delay = GAME_SCENE_CONFIG.winOverlay.stageDelayMs * (i + 2);
-      const timeoutId = globalThis.setTimeout(() => {
-        void this.showWinStage(i + 1);
-      }, delay);
-      this.winTimeoutIds.push(timeoutId);
-    }
-  }
-
   private async showWinStage(stageIndex: number): Promise<void> {
     if (stageIndex === 0) {
       this.showBigWin();
@@ -488,14 +475,13 @@ export class GameScene implements IScene {
   }
 
   private clearAllWinTimers(): void {
-    if (this.bigWinTimeoutId !== null) {
-      globalThis.clearTimeout(this.bigWinTimeoutId);
-      this.bigWinTimeoutId = null;
+    this.shouldSkipWinFeedback = true;
+    this.bigWinOverlay.visible = false;
+    this.disposeActiveSpineWin();
+    if (this.bigWinSprite) {
+      this.bigWinSprite.stop();
+      this.bigWinSprite.visible = false;
     }
-    for (const timeoutId of this.winTimeoutIds) {
-      globalThis.clearTimeout(timeoutId);
-    }
-    this.winTimeoutIds.length = 0;
   }
 
   private setupHud(): void {
@@ -591,8 +577,7 @@ export class GameScene implements IScene {
 
     if (spinResult.totalWin > 0) {
       this.slotStore.setPhase('showingWin');
-      this.scheduleWinSequence();
-      await this.waitMs(300);
+      await this.playWinFeedback(spinResult.totalMultiplier);
     }
 
     this.slotStore.setPhase('settling');
@@ -743,5 +728,48 @@ export class GameScene implements IScene {
       globalThis.clearTimeout(timeoutId);
     }
     this.spinTimeoutIds.length = 0;
+  }
+
+  private async playWinFeedback(totalMultiplier: number): Promise<void> {
+    const stageIndices = this.getWinStageIndices(totalMultiplier);
+    if (stageIndices.length === 0) {
+      return;
+    }
+
+    this.shouldSkipWinFeedback = false;
+    for (const stageIndex of stageIndices) {
+      if (this.shouldSkipWinFeedback) {
+        break;
+      }
+      await this.showWinStage(stageIndex);
+      if (this.shouldSkipWinFeedback) {
+        break;
+      }
+      await this.waitMs(GAME_SCENE_CONFIG.winOverlay.stageDelayMs);
+    }
+
+    this.bigWinOverlay.visible = false;
+    this.disposeActiveSpineWin();
+    if (this.bigWinSprite) {
+      this.bigWinSprite.stop();
+      this.bigWinSprite.visible = false;
+    }
+  }
+
+  private getWinStageIndices(totalMultiplier: number): number[] {
+    const { thresholds } = GAME_SCENE_CONFIG.winOverlay;
+    if (totalMultiplier >= thresholds.totalWin) {
+      return [0, 1, 2, 3];
+    }
+    if (totalMultiplier >= thresholds.superMegaWin) {
+      return [0, 1, 2];
+    }
+    if (totalMultiplier >= thresholds.megaWin) {
+      return [0, 1];
+    }
+    if (totalMultiplier >= thresholds.bigWin) {
+      return [0];
+    }
+    return [];
   }
 }
