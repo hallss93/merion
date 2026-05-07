@@ -8,13 +8,26 @@ import {
   SPINE_WIN_DEFINITIONS,
   type SymbolDefinition,
 } from '../config/gameSceneConfig';
+import { SlotStore } from '../state/SlotStore';
+import { SpinEngine } from '../domain/slot/SpinEngine';
+import { SpinButton } from '../ui/components/SpinButton';
+import { BetControl } from '../ui/components/BetControl';
+import { BalancePanel } from '../ui/components/BalancePanel';
+import type { SlotState } from '../state/SlotStore';
+import type { SpinResult } from '../domain/slot/SlotTypes';
 
 export class GameScene implements IScene {
   public readonly container = new Container();
   private readonly backgroundSprite = new Sprite(Texture.EMPTY);
   private readonly reelsContainer = new Container();
+  private readonly hudContainer = new Container();
   private readonly bigWinOverlay = new Container();
   private readonly bigWinDim = new Sprite(Texture.WHITE);
+  private readonly slotStore = new SlotStore();
+  private readonly spinEngine = new SpinEngine();
+  private readonly spinButton = new SpinButton();
+  private readonly betControl = new BetControl();
+  private readonly balancePanel = new BalancePanel();
   private foxSpine: Spine | null = null;
   private readonly reelSprites: AnimatedSprite[] = [];
   private readonly symbolTextureCache = new Map<string, Texture[]>();
@@ -26,18 +39,23 @@ export class GameScene implements IScene {
   private lastHeight = 1080;
   private bigWinTimeoutId: number | null = null;
   private readonly winTimeoutIds: number[] = [];
+  private unsubscribeStore: (() => void) | null = null;
 
   public constructor() {
     this.container.sortableChildren = true;
     this.container.addChild(this.backgroundSprite);
     this.reelsContainer.zIndex = GAME_SCENE_CONFIG.reel.zIndex;
     this.container.addChild(this.reelsContainer);
+    this.hudContainer.zIndex = 120;
+    this.container.addChild(this.hudContainer);
     this.bigWinOverlay.zIndex = GAME_SCENE_CONFIG.winOverlay.zIndex;
     this.bigWinDim.tint = 0x000000;
     this.bigWinDim.alpha = GAME_SCENE_CONFIG.winOverlay.dimAlpha;
     this.bigWinOverlay.addChild(this.bigWinDim);
     this.bigWinOverlay.visible = false;
     this.container.addChild(this.bigWinOverlay);
+    this.setupHud();
+    this.bindStore();
   }
 
   public onEnter(): void {
@@ -46,7 +64,7 @@ export class GameScene implements IScene {
     void this.ensureReelSymbols();
     void this.ensureBigWinAnimation();
     void this.preloadSpineWinAssets();
-    this.scheduleWinSequence();
+    this.refreshHudFromState(this.slotStore.getSnapshot());
 
     const texture = Assets.get('main_game_screen') as Texture | undefined;
     if (texture) {
@@ -70,6 +88,7 @@ export class GameScene implements IScene {
       this.activeSpineWin.destroy();
       this.activeSpineWin = null;
     }
+    this.bigWinSprite?.stop();
     this.bigWinOverlay.visible = false;
     this.container.visible = false;
   }
@@ -89,6 +108,7 @@ export class GameScene implements IScene {
     this.layoutReels();
     this.positionFox(width, height);
     this.layoutBigWin(width, height);
+    this.layoutHud(width, height);
   }
 
   private async loadMainGameTexture(): Promise<void> {
@@ -466,5 +486,107 @@ export class GameScene implements IScene {
       globalThis.clearTimeout(timeoutId);
     }
     this.winTimeoutIds.length = 0;
+  }
+
+  private setupHud(): void {
+    this.hudContainer.addChild(this.balancePanel.container);
+    this.hudContainer.addChild(this.betControl.container);
+    this.hudContainer.addChild(this.spinButton.container);
+    this.spinButton.onClick(() => {
+      void this.handleSpinClick();
+    });
+    this.betControl.onIncrease(() => {
+      this.slotStore.increaseBet();
+    });
+    this.betControl.onDecrease(() => {
+      this.slotStore.decreaseBet();
+    });
+  }
+
+  private bindStore(): void {
+    if (this.unsubscribeStore) {
+      return;
+    }
+    this.unsubscribeStore = this.slotStore.subscribe((state) => {
+      this.refreshHudFromState(state);
+    });
+  }
+
+  private refreshHudFromState(state: SlotState): void {
+    const currentBet = state.betOptions[state.betIndex] ?? 0;
+    this.balancePanel.update(state.balance, currentBet, state.lastWin);
+    this.betControl.setValue(currentBet);
+    const canInteract = state.phase === 'idle';
+    this.betControl.setEnabled(canInteract);
+    this.spinButton.setEnabled(this.slotStore.canSpin());
+  }
+
+  private layoutHud(width: number, height: number): void {
+    this.balancePanel.container.position.set(width * 0.5 - 265, height - 92);
+    this.betControl.container.position.set(width * 0.5 - 130, height - 165);
+    this.spinButton.container.position.set(width * 0.5 + 150, height - 165);
+  }
+
+  private async handleSpinClick(): Promise<void> {
+    if (!this.slotStore.startSpin()) {
+      return;
+    }
+
+    this.clearAllWinTimers();
+    this.bigWinOverlay.visible = false;
+    this.slotStore.setPhase('spinning');
+    const spinSymbols = this.getActiveSymbolDefinitions();
+    this.createOrUpdateReelGrid(spinSymbols, true);
+    this.layoutReels();
+
+    await this.waitMs(900);
+    this.slotStore.setPhase('evaluating');
+
+    const spinResult = this.spinEngine.spin({
+      bet: this.slotStore.getCurrentBet(),
+      symbols: spinSymbols,
+      rows: GAME_SCENE_CONFIG.reel.rows,
+      columns: GAME_SCENE_CONFIG.reel.columns,
+    });
+    this.applySpinResult(spinResult);
+
+    if (spinResult.totalWin > 0) {
+      this.slotStore.setPhase('showingWin');
+      this.scheduleWinSequence();
+      await this.waitMs(300);
+    }
+
+    this.slotStore.setPhase('settling');
+    this.slotStore.settleSpin(spinResult.totalWin);
+  }
+
+  private applySpinResult(result: SpinResult): void {
+    const rows = Math.min(result.matrix.length, GAME_SCENE_CONFIG.reel.rows);
+    for (let row = 0; row < rows; row += 1) {
+      const rowData = result.matrix[row];
+      const columns = Math.min(rowData.length, GAME_SCENE_CONFIG.reel.columns);
+      for (let col = 0; col < columns; col += 1) {
+        const sprite = this.reelSprites[row * GAME_SCENE_CONFIG.reel.columns + col];
+        if (!sprite) {
+          continue;
+        }
+
+        const textures = this.getSymbolTextures(rowData[col]);
+        if (textures.length === 0) {
+          continue;
+        }
+
+        sprite.textures = textures;
+        sprite.gotoAndPlay((row + col) % textures.length);
+      }
+    }
+
+    this.layoutReels();
+  }
+
+  private async waitMs(ms: number): Promise<void> {
+    await new Promise<void>((resolve) => {
+      globalThis.setTimeout(resolve, ms);
+    });
   }
 }
