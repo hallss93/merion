@@ -579,6 +579,10 @@ export class GameScene implements IScene {
       rows: GAME_SCENE_CONFIG.reel.rows,
       columns: GAME_SCENE_CONFIG.reel.columns,
     });
+    this.logRound({
+      bet: this.slotStore.getCurrentBet(),
+      result: spinResult,
+    });
 
     await this.playSpinByColumns(spinSymbols, spinResult.matrix);
     this.slotStore.setPhase('evaluating');
@@ -783,5 +787,18 @@ export class GameScene implements IScene {
       return [0];
     }
     return [];
+  }
+
+  private logRound(payload: { bet: number; result: SpinResult }): void {
+    const { bet, result } = payload;
+    console.info('[slot-round]', {
+      bet,
+      result: {
+        matrix: result.matrix.map((row) => row.map((symbol) => symbol.folder)),
+        wins: result.wins,
+      },
+      multiplier: result.totalMultiplier,
+      win: result.totalWin,
+    });
   }
 }
