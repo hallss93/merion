@@ -10,6 +10,7 @@ import {
 } from '../config/gameSceneConfig';
 import { SlotStore } from '../state/SlotStore';
 import { SpinEngine } from '../domain/slot/SpinEngine';
+import { getWinStageIndices as computeWinStageIndices } from '../domain/slot/winOverlayStages';
 import { SpinButton } from '../ui/components/SpinButton';
 import { BetControl } from '../ui/components/BetControl';
 import { BalancePanel } from '../ui/components/BalancePanel';
@@ -748,28 +749,7 @@ export class GameScene implements IScene {
   }
 
   private getWinStageIndices(totalWin: number): number[] {
-    const primaryStageIndex = this.getPrimaryWinStageIndex(totalWin);
-    if (primaryStageIndex === null) {
-      return [];
-    }
-    return [primaryStageIndex, 3];
-  }
-
-  private getPrimaryWinStageIndex(totalWin: number): 0 | 1 | 2 | null {
-    const { amountThresholds } = GAME_SCENE_CONFIG.winOverlay;
-    if (totalWin >= amountThresholds.superMegaWin) {
-      return 2;
-    }
-    if (totalWin >= amountThresholds.megaWin) {
-      return 1;
-    }
-    if (totalWin >= amountThresholds.bigWin) {
-      return 0;
-    }
-    if (totalWin > 0) {
-      return 0;
-    }
-    return null;
+    return computeWinStageIndices(totalWin, GAME_SCENE_CONFIG.winOverlay.amountThresholds);
   }
 
   private logRound(payload: { bet: number; result: SpinResult }): void {
