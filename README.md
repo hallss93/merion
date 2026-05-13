@@ -78,6 +78,7 @@ Em `game-client/package.json`:
 - `npm run dev` - sobe servidor local com Vite
 - `npm run build` - gera build de producao (`tsc && vite build`)
 - `npm run preview` - sobe preview da build gerada
+- `npm test` - executa testes com [Vitest](https://vitest.dev/) (ex.: `src/domain/slot/SpinEngine.test.ts`, `src/state/SlotStore.test.ts`)
 
 ## Build de producao
 
@@ -137,19 +138,20 @@ Checklist tecnico recomendado:
 
 - `npm run dev` inicia sem erro
 - `npm run build` conclui com sucesso
+- `npm test` passa em `game-client/`
 - sem erros de lint/diagnostico em `src`
 - fluxo visual confere com as referencias do desafio
 
 ## Limitacoes conhecidas
 
 - o bundle principal ainda esta acima do warning padrao do Vite de 500kB.
-- nao ha suite automatizada de testes (foco desta entrega foi fluxo visual e arquitetura).
+- a cobertura de testes automatizados ainda e limitada (motor do slot e store; sem E2E na pipeline).
 - ajustes finos de timing/layout podem variar por resolucao e dispositivo.
 
 ## Melhorias futuras
 
 - code splitting adicional para reduzir tamanho de bundle inicial
-- testes de unidade para servicos (asset/animation)
+- ampliar testes de unidade (servicos asset/animation, paytable, mais fluxos de UI)
 - testes E2E de fluxo de cena/rota
 - telemetry simples de FPS e tempo de loading por etapa
 
