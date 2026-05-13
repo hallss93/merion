@@ -36,10 +36,7 @@ export class GameApp {
     this.bindResize();
     const { width, height } = this.pixiApp.screen;
     this.sceneManager.setScene(this.loadingScene, width, height);
-    await Promise.all([
-      this.assetService.preloadBoot(),
-      this.simulateInitialLoad(),
-    ]);
+    await Promise.all([this.assetService.preloadBoot(), this.simulateInitialLoad()]);
 
     const nextSize = this.pixiApp.screen;
     this.sceneManager.setScene(this.gameScene, nextSize.width, nextSize.height);

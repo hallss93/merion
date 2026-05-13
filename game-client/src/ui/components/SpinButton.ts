@@ -55,7 +55,8 @@ export class SpinButton {
       return;
     }
     await Assets.load('/assets/ui/hud/spin.png');
-    this.spinSprite.texture = (Assets.get('/assets/ui/hud/spin.png') as Texture | undefined) ?? Texture.EMPTY;
+    this.spinSprite.texture =
+      (Assets.get('/assets/ui/hud/spin.png') as Texture | undefined) ?? Texture.EMPTY;
     this.assetsReady = true;
   }
 

@@ -72,10 +72,7 @@ export class LoadingView {
       return;
     }
 
-    const widthRatio = Math.max(
-      LOADING_VIEW_CONFIG.fox.minWidthRatio,
-      Math.min(width / 1920, 1),
-    );
+    const widthRatio = Math.max(LOADING_VIEW_CONFIG.fox.minWidthRatio, Math.min(width / 1920, 1));
     const targetHeight =
       height *
       (LOADING_VIEW_CONFIG.fox.targetHeightBase +
@@ -88,9 +85,11 @@ export class LoadingView {
 
     // Move para a direita em telas estreitas para preservar composição.
     const foxX =
-      width * (LOADING_VIEW_CONFIG.fox.xBase - widthRatio * LOADING_VIEW_CONFIG.fox.xWidthRatioFactor);
+      width *
+      (LOADING_VIEW_CONFIG.fox.xBase - widthRatio * LOADING_VIEW_CONFIG.fox.xWidthRatioFactor);
     const foxY =
-      height * (LOADING_VIEW_CONFIG.fox.yBase - widthRatio * LOADING_VIEW_CONFIG.fox.yWidthRatioFactor);
+      height *
+      (LOADING_VIEW_CONFIG.fox.yBase - widthRatio * LOADING_VIEW_CONFIG.fox.yWidthRatioFactor);
     this.foxSpine.position.set(foxX, foxY);
   }
 

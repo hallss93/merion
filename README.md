@@ -79,6 +79,10 @@ Em `game-client/package.json`:
 - `npm run build` - gera build de producao (`tsc && vite build`)
 - `npm run preview` - sobe preview da build gerada
 - `npm test` - executa testes com [Vitest](https://vitest.dev/) (ex.: `src/domain/slot/SpinEngine.test.ts`, `src/state/SlotStore.test.ts`)
+- `npm run lint` - executa [ESLint](https://eslint.org/) em `src/`
+- `npm run lint:fix` - ESLint com correcao automatica quando possivel
+- `npm run format` - aplica [Prettier](https://prettier.io/) em `src/**/*.ts` e `src/**/*.css`
+- `npm run format:check` - verifica formatacao sem alterar arquivos
 
 ## Build de producao
 
@@ -139,7 +143,7 @@ Checklist tecnico recomendado:
 - `npm run dev` inicia sem erro
 - `npm run build` conclui com sucesso
 - `npm test` passa em `game-client/`
-- sem erros de lint/diagnostico em `src`
+- `npm run lint` e `npm run format:check` passam em `game-client/`
 - fluxo visual confere com as referencias do desafio
 
 ## Limitacoes conhecidas

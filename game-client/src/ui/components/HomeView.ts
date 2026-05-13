@@ -204,15 +204,10 @@ export class HomeView {
     const contentHeight = this.referenceHeight * scale;
 
     this.layoutRoot.scale.set(scale);
-    this.layoutRoot.position.set(
-      (width - contentWidth) * 0.5,
-      (height - contentHeight) * 0.5,
-    );
+    this.layoutRoot.position.set((width - contentWidth) * 0.5, (height - contentHeight) * 0.5);
 
     this.background.clear();
-    this.background
-      .rect(0, 0, this.referenceWidth, this.referenceHeight)
-      .fill(0x2b1403);
+    this.background.rect(0, 0, this.referenceWidth, this.referenceHeight).fill(0x2b1403);
 
     this.reelFrame.clear();
     this.reelFrame
@@ -232,17 +227,12 @@ export class HomeView {
       .fill(0xa55c1b)
       .stroke({ color: 0xffc77a, width: 3 });
     if (this.characterSprite) {
-      this.characterSprite.position.set(
-        this.referenceWidth - 225,
-        this.referenceHeight - 165,
-      );
+      this.characterSprite.position.set(this.referenceWidth - 225, this.referenceHeight - 165);
       this.characterSprite.scale.set(0.72);
     }
 
     this.topBar.clear();
-    this.topBar
-      .rect(0, 0, this.referenceWidth, 90)
-      .fill({ color: 0x2a2a2a, alpha: 0.92 });
+    this.topBar.rect(0, 0, this.referenceWidth, 90).fill({ color: 0x2a2a2a, alpha: 0.92 });
 
     this.bottomBar.clear();
     this.bottomBar

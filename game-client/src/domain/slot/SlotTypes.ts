@@ -1,11 +1,6 @@
 import type { SymbolDefinition } from '../../config/gameSceneConfig';
 
-export type SlotPhase =
-  | 'idle'
-  | 'spinning'
-  | 'evaluating'
-  | 'showingWin'
-  | 'settling';
+export type SlotPhase = 'idle' | 'spinning' | 'evaluating' | 'showingWin' | 'settling';
 
 export type RngMode = 'fair' | 'mock';
 

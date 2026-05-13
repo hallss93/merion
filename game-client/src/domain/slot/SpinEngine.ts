@@ -43,9 +43,7 @@ export class SpinEngine {
       const rowSymbols: SymbolDefinition[] = [];
       for (let column = 0; column < columns; column += 1) {
         rowSymbols.push(
-          this.rngMode === 'mock'
-            ? this.rng.pickMock(symbols)
-            : this.rng.pick(symbols),
+          this.rngMode === 'mock' ? this.rng.pickMock(symbols) : this.rng.pick(symbols),
         );
       }
       matrix.push(rowSymbols);

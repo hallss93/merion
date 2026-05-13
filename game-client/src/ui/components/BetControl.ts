@@ -75,7 +75,8 @@ export class BetControl {
       return;
     }
     await Assets.load('/assets/ui/hud/cima-baixo.png');
-    const texture = (Assets.get('/assets/ui/hud/cima-baixo.png') as Texture | undefined) ?? Texture.EMPTY;
+    const texture =
+      (Assets.get('/assets/ui/hud/cima-baixo.png') as Texture | undefined) ?? Texture.EMPTY;
     this.controlSprite.texture = texture;
     this.hitAreaSprite.texture = texture;
     this.assetsReady = true;

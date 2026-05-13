@@ -137,9 +137,7 @@ export class GameScene implements IScene {
     const symbolDefinitions = this.getActiveSymbolDefinitions();
     const nextMode: 'objects' | 'coins' = this.isCoinRoute() ? 'coins' : 'objects';
     if (!this.symbolsReady) {
-      const urls = symbolDefinitions.flatMap((symbol) =>
-        this.buildSymbolUrls(symbol),
-      );
+      const urls = symbolDefinitions.flatMap((symbol) => this.buildSymbolUrls(symbol));
       await Assets.load(urls);
       this.createOrUpdateReelGrid(symbolDefinitions, true);
       this.symbolsReady = true;
@@ -206,9 +204,7 @@ export class GameScene implements IScene {
         sprite.animationSpeed =
           (0.18 + ((row + col) % 4) * 0.02) * GAME_SCENE_CONFIG.animationSpeedMultiplier;
         sprite.gotoAndPlay(
-          (row +
-            col * 3 +
-            Math.floor(Math.random() * GAME_SCENE_CONFIG.reel.minRandomOffset)) %
+          (row + col * 3 + Math.floor(Math.random() * GAME_SCENE_CONFIG.reel.minRandomOffset)) %
             textures.length,
         );
       }
@@ -257,8 +253,7 @@ export class GameScene implements IScene {
     }
 
     const backgroundWidth = this.backgroundSprite.texture.width * this.backgroundSprite.scale.x;
-    const backgroundHeight =
-      this.backgroundSprite.texture.height * this.backgroundSprite.scale.y;
+    const backgroundHeight = this.backgroundSprite.texture.height * this.backgroundSprite.scale.y;
     const backgroundX = this.backgroundSprite.x;
     const backgroundY = this.backgroundSprite.y;
 
@@ -294,9 +289,7 @@ export class GameScene implements IScene {
   }
 
   private getActiveSymbolDefinitions(): SymbolDefinition[] {
-    return this.isCoinRoute()
-      ? COIN_SYMBOL_DEFINITIONS
-      : OBJECT_SYMBOL_DEFINITIONS;
+    return this.isCoinRoute() ? COIN_SYMBOL_DEFINITIONS : OBJECT_SYMBOL_DEFINITIONS;
   }
 
   private isCoinRoute(): boolean {
@@ -404,11 +397,7 @@ export class GameScene implements IScene {
     if (!definition) {
       return;
     }
-    await this.showSpineWin(
-      definition.skeleton,
-      definition.atlas,
-      definition.animation,
-    );
+    await this.showSpineWin(definition.skeleton, definition.atlas, definition.animation);
   }
 
   private showBigWin(): void {
@@ -430,11 +419,7 @@ export class GameScene implements IScene {
     await Assets.load(urls);
   }
 
-  private async showSpineWin(
-    skeleton: string,
-    atlas: string,
-    animation: string,
-  ): Promise<void> {
+  private async showSpineWin(skeleton: string, atlas: string, animation: string): Promise<void> {
     if (this.bigWinSprite) {
       this.bigWinSprite.stop();
       this.bigWinSprite.visible = false;
@@ -538,10 +523,7 @@ export class GameScene implements IScene {
     const bottomY = height - Math.max(balanceSize.height, groupHeight) - 18;
     const alignedY = bottomY + 62;
 
-    this.balancePanel.container.position.set(
-      width * 0.5 - balanceSize.width * 0.5 - 120,
-      alignedY,
-    );
+    this.balancePanel.container.position.set(width * 0.5 - balanceSize.width * 0.5 - 120, alignedY);
     this.mainButtonContainer.scale.set(0.88);
     const scaledGroupWidth = groupWidth * this.mainButtonContainer.scale.x;
     const mainGroupX = width - width * 0.11 - scaledGroupWidth;
@@ -652,18 +634,14 @@ export class GameScene implements IScene {
     this.layoutReels();
   }
 
-  private startColumnSpin(
-    column: number,
-    symbolDefinitions: SymbolDefinition[],
-  ): void {
+  private startColumnSpin(column: number, symbolDefinitions: SymbolDefinition[]): void {
     for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
       const sprite = this.getReelSprite(row, column);
       if (!sprite) {
         continue;
       }
 
-      const symbol =
-        symbolDefinitions[Math.floor(Math.random() * symbolDefinitions.length)];
+      const symbol = symbolDefinitions[Math.floor(Math.random() * symbolDefinitions.length)];
       const textures = this.getSymbolTextures(symbol);
       if (textures.length === 0) {
         continue;
@@ -676,10 +654,7 @@ export class GameScene implements IScene {
     }
   }
 
-  private stopColumnWithFinalResult(
-    column: number,
-    finalMatrix: SymbolDefinition[][],
-  ): void {
+  private stopColumnWithFinalResult(column: number, finalMatrix: SymbolDefinition[][]): void {
     for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
       const sprite = this.getReelSprite(row, column);
       if (!sprite) {

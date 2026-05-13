@@ -1,7 +1,4 @@
-export type AssetCategory =
-  | 'ui'
-  | 'sequences'
-  | 'spine';
+export type AssetCategory = 'ui' | 'sequences' | 'spine';
 
 export type AssetLoadGroup = 'loading' | 'boot' | 'lazy';
 
@@ -135,9 +132,9 @@ export const ASSETS_MANIFEST: AssetItem[] = [
   },
 ];
 
-export const BOOT_ASSET_KEYS = ASSETS_MANIFEST.filter(
-  (item) => item.loadGroup === 'boot',
-).map((item) => item.key);
+export const BOOT_ASSET_KEYS = ASSETS_MANIFEST.filter((item) => item.loadGroup === 'boot').map(
+  (item) => item.key,
+);
 
 export interface SequenceDefinition {
   key: string;

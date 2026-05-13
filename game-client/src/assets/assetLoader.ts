@@ -20,9 +20,7 @@ export function registerRuntimeAssets(): void {
   }
 }
 
-export async function loadAssetGroup(
-  group: 'loading' | 'boot' | 'lazy',
-): Promise<void> {
+export async function loadAssetGroup(group: 'loading' | 'boot' | 'lazy'): Promise<void> {
   const keys = ASSETS_MANIFEST.filter(
     (asset) => asset.loadGroup === group && isRuntimeLoadable(asset),
   ).map((asset) => asset.key);
@@ -46,9 +44,9 @@ function buildSequenceFrameUrls(sequence: SequenceDefinition): string[] {
 }
 
 export async function loadSequenceGroup(group: 'boot' | 'lazy'): Promise<void> {
-  const frameUrls = SEQUENCE_DEFINITIONS.filter(
-    (sequence) => sequence.loadGroup === group,
-  ).flatMap((sequence) => buildSequenceFrameUrls(sequence));
+  const frameUrls = SEQUENCE_DEFINITIONS.filter((sequence) => sequence.loadGroup === group).flatMap(
+    (sequence) => buildSequenceFrameUrls(sequence),
+  );
 
   if (frameUrls.length === 0) {
     return;

@@ -1,8 +1,4 @@
-import {
-  loadAssetGroup,
-  loadSequenceGroup,
-  registerRuntimeAssets,
-} from '../assets/assetLoader';
+import { loadAssetGroup, loadSequenceGroup, registerRuntimeAssets } from '../assets/assetLoader';
 
 export class AssetService {
   public registerAssets(): void {
