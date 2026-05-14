@@ -16,7 +16,8 @@ import { BetControl } from '../ui/components/BetControl';
 import { BalancePanel } from '../ui/components/BalancePanel';
 import { ReloadButton } from '../ui/components/ReloadButton';
 import type { SlotState } from '../state/SlotStore';
-import type { SpinResult } from '../domain/slot/SlotTypes';
+import type { SlotPhase, SpinResult } from '../domain/slot/SlotTypes';
+import { shouldIgnoreKeyboardShortcut } from '../utils/a11y';
 
 export class GameScene implements IScene {
   public readonly container = new Container();
@@ -45,6 +46,18 @@ export class GameScene implements IScene {
   private readonly spinTimeoutIds: number[] = [];
   private spinInputLocked = false;
   private unsubscribeStore: (() => void) | null = null;
+  private readonly onGlobalKeydown = (event: KeyboardEvent): void => {
+    if (shouldIgnoreKeyboardShortcut(event)) {
+      return;
+    }
+    if (event.code !== 'Space' && event.code !== 'Enter') {
+      return;
+    }
+    if (event.code === 'Space') {
+      event.preventDefault();
+    }
+    void this.handleSpinClick();
+  };
 
   public constructor() {
     this.container.sortableChildren = true;
@@ -75,6 +88,7 @@ export class GameScene implements IScene {
   public onEnter(): void {
     this.container.visible = true;
     this.hudContainer.visible = true;
+    globalThis.window.addEventListener('keydown', this.onGlobalKeydown);
     void this.ensureHudAssets();
     this.ensureFoxSpine();
     void this.ensureReelSymbols();
@@ -93,6 +107,7 @@ export class GameScene implements IScene {
   }
 
   public onExit(): void {
+    globalThis.window.removeEventListener('keydown', this.onGlobalKeydown);
     this.clearAllWinTimers();
     this.clearSpinTimers();
     for (const sprite of this.reelSprites) {
@@ -508,6 +523,7 @@ export class GameScene implements IScene {
     this.betControl.setEnabled(canInteract);
     this.spinButton.setEnabled(this.slotStore.canSpin() && !this.spinInputLocked);
     this.reloadButton.setEnabled(canInteract);
+    this.updateScreenReaderSummary(state);
   }
 
   private layoutHud(width: number, height: number): void {
@@ -535,6 +551,47 @@ export class GameScene implements IScene {
       betSize.width + spinSize.width - overlapBetSpin - overlapSpinReload,
       0,
     );
+  }
+
+  private formatPhaseForScreenReader(phase: SlotPhase): string {
+    switch (phase) {
+      case 'idle':
+        return 'ocioso';
+      case 'spinning':
+        return 'girando';
+      case 'evaluating':
+        return 'avaliando resultado';
+      case 'showingWin':
+        return 'mostrando ganho';
+      case 'settling':
+        return 'finalizando rodada';
+      default:
+        return phase;
+    }
+  }
+
+  private updateScreenReaderSummary(state: SlotState): void {
+    const region = document.getElementById('merion-game-status');
+    if (!region) {
+      return;
+    }
+
+    const bet = state.betOptions[state.betIndex] ?? 0;
+    const phaseLabel = this.formatPhaseForScreenReader(state.phase);
+    const blockReason = this.slotStore.getSpinBlockReason();
+    let actionHint = '';
+
+    if (this.spinInputLocked) {
+      actionHint = ' Aguarde, comando em execução.';
+    } else if (state.phase === 'idle') {
+      if (blockReason === 'insufficient_balance') {
+        actionHint = ' Saldo insuficiente para a aposta atual.';
+      } else if (blockReason === null) {
+        actionHint = ' Pressione Espaço ou Enter para girar.';
+      }
+    }
+
+    region.textContent = `Saldo ${state.balance}. Aposta ${bet}. Último ganho: ${state.lastWin}. Estado: ${phaseLabel}.${actionHint}`;
   }
 
   private async handleSpinClick(): Promise<void> {

@@ -27,6 +27,12 @@ export class GameApp {
       resolution: Math.min(globalThis.window.devicePixelRatio || 1, 2),
     });
 
+    this.hostElement.tabIndex = 0;
+    this.hostElement.setAttribute('role', 'application');
+    this.hostElement.setAttribute(
+      'aria-label',
+      'Caça-níqueis: use Tab para focar esta área; Espaço ou Enter para girar quando o jogo permitir.',
+    );
     this.hostElement.replaceChildren(this.pixiApp.canvas);
     this.pixiApp.stage.addChild(this.rootContainer);
 
