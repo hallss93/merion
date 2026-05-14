@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd game-client && npm ci",
+  "buildCommand": "cd game-client && npm run build",
+  "outputDirectory": "game-client/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

@@ -94,6 +94,18 @@ npm run preview
 
 Saida gerada em `game-client/dist/`.
 
+## Deploy na Vercel
+
+O repositorio inclui `vercel.json` na **raiz**: instala dependencias e faz o build dentro de `game-client/`, publica `game-client/dist` e configura **SPA fallback** (rota `/coins` ao recarregar a pagina).
+
+1. Envie o codigo para um repositorio no GitHub (ou GitLab/Bitbucket suportado pela Vercel).
+2. Em [vercel.com](https://vercel.com), **Add New Project** e importe o repositorio.
+3. Deixe o **Root Directory** como a raiz do monorepo (`.`). Nao defina Root Directory como `game-client` ao mesmo tempo que este `vercel.json`, para nao duplicar o `cd game-client`.
+4. Confirme que o **Build Command** e **Output Directory** mostrados batem com o `vercel.json` (a Vercel costuma ler o arquivo automaticamente).
+5. Deploy. A URL gerada servira o jogo na raiz; o modo moedas continua em `/coins`.
+
+Requisitos: **Node.js 20+** (ajuste em Project Settings > General > Node.js Version se necessario).
+
 ## Arquitetura e decisoes tecnicas
 
 ### 1) Cena e ciclo de vida
