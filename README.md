@@ -96,15 +96,22 @@ Saida gerada em `game-client/dist/`.
 
 ## Deploy na Vercel
 
-O repositorio inclui `vercel.json` na **raiz**: instala dependencias e faz o build dentro de `game-client/`, publica `game-client/dist` e configura **SPA fallback** (rota `/coins` ao recarregar a pagina).
+Ha dois jeitos validos; escolha **um** no painel do projeto (**Settings → General → Root Directory**).
 
-1. Envie o codigo para um repositorio no GitHub (ou GitLab/Bitbucket suportado pela Vercel).
-2. Em [vercel.com](https://vercel.com), **Add New Project** e importe o repositorio.
-3. Deixe o **Root Directory** como a raiz do monorepo (`.`). Nao defina Root Directory como `game-client` ao mesmo tempo que este `vercel.json`, para nao duplicar o `cd game-client`.
-4. Confirme que o **Build Command** e **Output Directory** mostrados batem com o `vercel.json` (a Vercel costuma ler o arquivo automaticamente).
-5. Deploy. A URL gerada servira o jogo na raiz; o modo moedas continua em `/coins`.
+### A) Raiz do repositorio (recomendado para monorepo)
 
-Requisitos: **Node.js 20+** (ajuste em Project Settings > General > Node.js Version se necessario).
+1. **Root Directory** = vazio ou `.` (raiz do clone: pasta `game-client/` visivel ao lado do `vercel.json`).
+2. O `vercel.json` na **raiz** usa `npm ci --prefix game-client` e `npm run build --prefix game-client` (sem `cd`, funciona no clone completo).
+3. Saida: `game-client/dist`. Rewrites para SPA (`/coins` ao recarregar).
+
+### B) So a pasta `game-client`
+
+1. **Root Directory** = `game-client`.
+2. A Vercel ignora o `vercel.json` da raiz e usa o `game-client/vercel.json` (so rewrites). **Install** = `npm ci`, **Build** = `npm run build`, **Output** = `dist` (padrao Vite).
+
+Se aparecer `cd: game-client: No such file or directory`, o projeto estava na opcao **B** com comandos da opcao **A**. Ajuste o Root Directory ou use os arquivos como acima.
+
+Requisitos: **Node.js 20+** (Project Settings → General → Node.js Version).
 
 ## Arquitetura e decisoes tecnicas
 
