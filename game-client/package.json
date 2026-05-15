@@ -1,21 +1,29 @@
 {
   "name": "game-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
+    "dev:electron": "vite --mode electron",
     "build": "tsc && vite build",
+    "build:electron": "tsc && vite build --mode electron",
+    "dist:electron": "npm run build:electron && electron-builder",
     "preview": "vite preview",
+    "preview:electron": "electron .",
     "test": "vitest run",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "format": "prettier --write \"src/**/*.{ts,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,css}\""
+    "lint": "eslint src electron",
+    "lint:fix": "eslint src electron --fix",
+    "format": "prettier --write \"src/**/*.{ts,css}\" \"electron/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.{ts,css}\" \"electron/**/*.ts\""
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/node": "^22.15.0",
     "@vitest/eslint-plugin": "^1.6.17",
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.6.0",
@@ -24,6 +32,7 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.3",
     "vite": "^8.0.10",
+    "vite-plugin-electron": "^0.29.0",
     "vitest": "^4.0.8"
   },
   "dependencies": {
@@ -33,5 +42,21 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "build": {
+    "appId": "com.merion.slot",
+    "productName": "Merion Slot",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
   }
 }

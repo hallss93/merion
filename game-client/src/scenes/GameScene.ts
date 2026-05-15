@@ -44,7 +44,7 @@ export class GameScene implements IScene {
   private currentSymbolMode: 'objects' | 'coins' | null = null;
   private lastWidth = 1920;
   private lastHeight = 1080;
-  private readonly spinTimeoutIds: number[] = [];
+  private readonly spinTimeoutIds: ReturnType<typeof globalThis.setTimeout>[] = [];
   private spinInputLocked = false;
   private unsubscribeStore: (() => void) | null = null;
   private readonly onGlobalKeydown = (event: KeyboardEvent): void => {

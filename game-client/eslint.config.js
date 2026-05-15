@@ -5,7 +5,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**'] },
+  { ignores: ['dist/**', 'dist-electron/**', 'release/**', 'node_modules/**'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   eslintConfigPrettier,
@@ -18,5 +18,11 @@ export default tseslint.config(
   {
     files: ['src/**/*.test.ts'],
     ...vitest.configs.recommended,
+  },
+  {
+    files: ['electron/**/*.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
   },
 );
