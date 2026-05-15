@@ -1,6 +1,7 @@
 import type { Container } from 'pixi.js';
 import type { IScene } from '../scenes/types';
 
+/** Troca a cena visível (Loading, Game, etc.) no container raiz. */
 export class SceneManager {
   private readonly sceneRoot: Container;
   private currentScene: IScene | null = null;
@@ -9,6 +10,7 @@ export class SceneManager {
     this.sceneRoot = sceneRoot;
   }
 
+  /** Remove a cena atual, entra na nova e aplica o tamanho da tela. */
   public setScene(nextScene: IScene, width: number, height: number): void {
     if (this.currentScene) {
       this.currentScene.onExit();
@@ -21,6 +23,7 @@ export class SceneManager {
     nextScene.onEnter();
   }
 
+  /** Atualiza layout da cena ativa ao redimensionar. */
   public resize(width: number, height: number): void {
     this.currentScene?.resize(width, height);
   }

@@ -1,5 +1,6 @@
 import type { PaylinePattern, PaytableRule } from './SlotTypes';
 
+/** Multiplicadores por símbolo e quantidade de iguais (3 a 6) na payline. */
 export const DEFAULT_PAYTABLE: PaytableRule[] = [
   { symbol: 'Dynamit', payouts: { 3: 1.3, 4: 2.2, 5: 3.5, 6: 5 } },
   { symbol: 'Handcuffs', payouts: { 3: 1.2, 4: 2, 5: 3.2, 6: 4.8 } },
@@ -25,7 +26,10 @@ export const DEFAULT_PAYTABLE: PaytableRule[] = [
   { symbol: 'Bank', payouts: { 3: 1.1, 4: 2, 5: 3.2, 6: 4.2 } },
 ];
 
-// 10 paylines oficiais para grade 6x5 (linhas 0-4).
+/**
+ * 10 paylines da grade 6×5.
+ * Cada número é a fileira (0=topo … 4=base) em que ler o símbolo naquela coluna.
+ */
 export const OFFICIAL_PAYLINES: PaylinePattern[] = [
   [0, 0, 0, 0, 0, 0],
   [1, 1, 1, 1, 1, 1],
@@ -39,6 +43,7 @@ export const OFFICIAL_PAYLINES: PaylinePattern[] = [
   [0, 0, 1, 2, 3, 4],
 ];
 
+/** Retorna o multiplicador do símbolo para a quantidade de matches (0 se count < 3). */
 export function getMultiplierForSymbol(
   symbol: string,
   count: number,

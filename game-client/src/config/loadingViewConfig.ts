@@ -1,3 +1,4 @@
+/** Layout da tela de carregamento (raposa, preloader, texto). */
 export const LOADING_VIEW_CONFIG = {
   spineSpeedMultiplier: 1.25,
   fallbackColor: 0x12081f,

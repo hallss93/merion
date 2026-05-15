@@ -4,6 +4,7 @@ import { LoadingScene } from '../scenes/LoadingScene';
 import { GameScene } from '../scenes/GameScene';
 import { AssetService } from '../services/AssetService';
 
+/** Inicializa o Pixi, carrega assets e alterna Loading → Game. */
 export class GameApp {
   private readonly hostElement: HTMLDivElement;
   private readonly pixiApp = new Application();
@@ -17,6 +18,7 @@ export class GameApp {
     this.hostElement = hostElement;
   }
 
+  /** Monta o canvas, registra assets e exibe a cena do slot. */
   public async start(): Promise<void> {
     await this.pixiApp.init({
       resizeTo: globalThis.window,
@@ -48,12 +50,14 @@ export class GameApp {
     this.sceneManager.setScene(this.gameScene, nextSize.width, nextSize.height);
   }
 
+  /** Repassa redimensionamento da janela para a cena ativa. */
   private bindResize(): void {
     this.pixiApp.renderer.on('resize', (newWidth: number, newHeight: number) => {
       this.sceneManager.resize(newWidth, newHeight);
     });
   }
 
+  /** Pausa mínima na tela de loading antes de abrir o jogo. */
   private async simulateInitialLoad(): Promise<void> {
     await new Promise<void>((resolve) => {
       globalThis.setTimeout(resolve, 3000);

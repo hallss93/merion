@@ -2,6 +2,7 @@ import { Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { LOADING_VIEW_CONFIG } from '../../config/loadingViewConfig';
 
+/** Layout da tela de carregamento: fundo, preloader, raposa e label. */
 export class LoadingView {
   public readonly container = new Container();
 
@@ -30,6 +31,7 @@ export class LoadingView {
     this.container.visible = isVisible;
   }
 
+  /** Ajusta fundo, preloader e raposa ao tamanho da tela. */
   public resize(width: number, height: number): void {
     this.loadPreloaderTexture();
     this.fitCover(this.preloaderSprite, width, height);
@@ -46,6 +48,7 @@ export class LoadingView {
     this.label.y = height * 0.5;
   }
 
+  /** Instancia a raposa Spine na tela de loading. */
   private ensureFoxSpine(): void {
     if (this.foxSpine) {
       return;
@@ -67,6 +70,7 @@ export class LoadingView {
     }
   }
 
+  /** Posiciona a raposa no canto direito da tela. */
   private positionFox(width: number, height: number): void {
     if (!this.foxSpine) {
       return;

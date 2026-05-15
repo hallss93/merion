@@ -2,6 +2,7 @@ import { Container } from 'pixi.js';
 import type { IScene } from './types';
 import { LoadingView } from '../ui/components/LoadingView';
 
+/** Tela exibida enquanto os assets iniciais carregam. */
 export class LoadingScene implements IScene {
   public readonly container = new Container();
   private readonly view = new LoadingView();

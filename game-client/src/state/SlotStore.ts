@@ -15,6 +15,7 @@ export interface SlotState {
 
 type Subscriber = (state: SlotState) => void;
 
+/** Estado do jogador: saldo, aposta, fase da rodada e último ganho. */
 export class SlotStore {
   private readonly state: SlotState;
   private readonly subscribers = new Set<Subscriber>();
@@ -33,18 +34,22 @@ export class SlotStore {
     };
   }
 
+  /** Cópia do estado atual para a UI ler sem mutar. */
   public getSnapshot(): SlotState {
     return { ...this.state };
   }
 
+  /** Valor da aposta selecionada agora. */
   public getCurrentBet(): number {
     return this.state.betOptions[this.state.betIndex] ?? 0;
   }
 
+  /** True se estiver idle e com saldo suficiente. */
   public canSpin(): boolean {
     return this.getSpinBlockReason() === null;
   }
 
+  /** Motivo pelo qual o giro está bloqueado, ou null se pode girar. */
   public getSpinBlockReason(): SpinBlockReason {
     if (this.state.phase !== 'idle') {
       return 'not_idle';
@@ -55,6 +60,7 @@ export class SlotStore {
     return null;
   }
 
+  /** Sobe um nível na lista de apostas (só em idle). */
   public increaseBet(): void {
     if (this.state.phase !== 'idle') {
       return;
@@ -63,6 +69,7 @@ export class SlotStore {
     this.emit();
   }
 
+  /** Desce um nível na lista de apostas (só em idle). */
   public decreaseBet(): void {
     if (this.state.phase !== 'idle') {
       return;
@@ -71,6 +78,7 @@ export class SlotStore {
     this.emit();
   }
 
+  /** Debita a aposta e entra em spinning; retorna false se não puder girar. */
   public startSpin(): boolean {
     if (!this.canSpin()) {
       return false;
@@ -84,11 +92,13 @@ export class SlotStore {
     return true;
   }
 
+  /** Atualiza a fase da rodada (spinning, showingWin, etc.). */
   public setPhase(phase: SlotPhase): void {
     this.state.phase = phase;
     this.emit();
   }
 
+  /** Credita o ganho, grava lastWin e volta para idle. */
   public settleSpin(totalWin: number): void {
     this.state.lastWin = Number(totalWin.toFixed(2));
     this.state.balance = Number((this.state.balance + totalWin).toFixed(2));
@@ -96,6 +106,7 @@ export class SlotStore {
     this.emit();
   }
 
+  /** Inscreve callback na mudança de estado; retorna função para cancelar. */
   public subscribe(subscriber: Subscriber): () => void {
     this.subscribers.add(subscriber);
     subscriber(this.getSnapshot());
@@ -104,6 +115,7 @@ export class SlotStore {
     };
   }
 
+  /** Notifica todos os inscritos com o estado atual. */
   private emit(): void {
     const snapshot = this.getSnapshot();
     for (const subscriber of this.subscribers) {

@@ -1,5 +1,6 @@
 import { Assets, Container, Sprite, Texture } from 'pixi.js';
 
+/** Botão para embaralhar os símbolos na grade (fora do giro). */
 export class ReloadButton {
   public readonly container = new Container();
   private readonly reloadSprite = new Sprite(Texture.EMPTY);
@@ -39,10 +40,12 @@ export class ReloadButton {
     });
   }
 
+  /** Registra o callback do reload. */
   public onClick(handler: () => void): void {
     this.clickHandler = handler;
   }
 
+  /** Habilita ou desabilita o botão. */
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
@@ -50,6 +53,7 @@ export class ReloadButton {
     this.reloadSprite.eventMode = enabled ? 'static' : 'none';
   }
 
+  /** Carrega a textura do botão reload. */
   public async ensureAssets(): Promise<void> {
     if (this.assetsReady) {
       return;

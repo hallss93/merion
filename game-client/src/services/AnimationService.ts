@@ -8,7 +8,9 @@ interface SequenceSpriteOptions {
   animationSpeed?: number;
 }
 
+/** Cria e controla sprites animados a partir do manifest de sequências. */
 export class AnimationService {
+  /** Monta um AnimatedSprite a partir da chave (ex.: fox_idle, golden_coin_1). */
   public createSequenceSprite(
     sequenceKey: string,
     options: SequenceSpriteOptions = {},
@@ -27,14 +29,17 @@ export class AnimationService {
     return sprite;
   }
 
+  /** Inicia a animação do sprite do frame 0. */
   public play(sprite: AnimatedSprite): void {
     sprite.gotoAndPlay(0);
   }
 
+  /** Pausa a animação do sprite. */
   public stop(sprite: AnimatedSprite): void {
     sprite.stop();
   }
 
+  /** Carrega frames PNG de uma sequência do manifest. */
   private getSequenceTextures(sequenceKey: string): Texture[] {
     const sequence = SEQUENCE_DEFINITIONS.find((item) => item.key === sequenceKey);
     if (!sequence) {

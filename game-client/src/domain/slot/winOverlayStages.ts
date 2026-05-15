@@ -1,9 +1,11 @@
+/** Valores mínimos de ganho para cada nível de animação de vitória. */
 export interface WinAmountThresholds {
   readonly bigWin: number;
   readonly megaWin: number;
   readonly superMegaWin: number;
 }
 
+/** Define a animação principal (0=Big, 1=Mega, 2=Super Mega) conforme o valor ganho. */
 export function getPrimaryWinStageIndex(
   totalWin: number,
   thresholds: WinAmountThresholds,
@@ -23,6 +25,7 @@ export function getPrimaryWinStageIndex(
   return null;
 }
 
+/** Lista de estágios a exibir: animação principal + Total Win (índice 3). */
 export function getWinStageIndices(totalWin: number, thresholds: WinAmountThresholds): number[] {
   const primaryStageIndex = getPrimaryWinStageIndex(totalWin, thresholds);
   if (primaryStageIndex === null) {

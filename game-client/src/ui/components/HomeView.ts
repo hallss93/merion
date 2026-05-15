@@ -2,6 +2,7 @@ import { AnimatedSprite, Container, Graphics, Text } from 'pixi.js';
 
 type StartHandler = () => void;
 
+/** Layout da cena inicial: título, botão Start, personagem e overlay. */
 export class HomeView {
   public readonly container = new Container();
   private readonly layoutRoot = new Container();
@@ -142,6 +143,7 @@ export class HomeView {
     this.container.addChild(this.layoutRoot);
   }
 
+  /** Callback ao clicar em Start. */
   public onStart(handler: StartHandler): void {
     this.startHandler = handler;
   }
@@ -150,10 +152,12 @@ export class HomeView {
     this.container.visible = isVisible;
   }
 
+  /** Texto auxiliar abaixo do título. */
   public setSubtitle(text: string): void {
     this.subtitle.text = text;
   }
 
+  /** Habilita ou desabilita o botão Start. */
   public setStartEnabled(enabled: boolean): void {
     this.isStartEnabled = enabled;
     this.startButton.alpha = enabled ? 1 : 0.55;
@@ -162,6 +166,7 @@ export class HomeView {
     this.startButton.eventMode = enabled ? 'static' : 'none';
   }
 
+  /** Troca o sprite do personagem (idle ou win). */
   public setCharacterSprite(sprite: AnimatedSprite | null): void {
     if (this.characterSprite) {
       this.characterSprite.removeFromParent();
@@ -176,6 +181,7 @@ export class HomeView {
     }
   }
 
+  /** Efeito visual no overlay (ex.: moedas na transição). */
   public setFxSprite(sprite: AnimatedSprite | null): void {
     if (this.fxSprite) {
       this.fxSprite.removeFromParent();
@@ -188,6 +194,7 @@ export class HomeView {
     }
   }
 
+  /** Mostra ou esconde o popup de loading/transição. */
   public setOverlayVisible(visible: boolean, label?: string): void {
     if (label) {
       this.popupLabel.text = label;
@@ -196,6 +203,7 @@ export class HomeView {
     this.overlayLayer.visible = visible;
   }
 
+  /** Redesenha o layout responsivo em 1920×1080 escalado. */
   public resize(width: number, height: number): void {
     const centerX = this.referenceWidth * 0.5;
     const centerY = this.referenceHeight * 0.5;
@@ -297,6 +305,7 @@ export class HomeView {
     }
   }
 
+  /** Escala o layout 1920×1080 para caber na janela. */
   private getResponsiveScale(width: number, height: number): number {
     const fitScale = Math.min(width / this.referenceWidth, height / this.referenceHeight);
 

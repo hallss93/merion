@@ -13,6 +13,7 @@ const BALANCE_MAX = 9_999;
 const WIN_MAX = 9_999_999;
 const BET_MAX = 999;
 
+/** Painel HUD: saldo, último ganho e aposta com dígitos em imagem. */
 export class BalancePanel {
   public readonly container = new Container();
   public readonly valuesGroup = new Container();
@@ -45,6 +46,7 @@ export class BalancePanel {
     this.redraw();
   }
 
+  /** Carrega placas e sprites dos números 0–9. */
   public async ensureAssets(): Promise<void> {
     if (this.digitsReady) {
       return;
@@ -81,6 +83,7 @@ export class BalancePanel {
     this.redraw();
   }
 
+  /** Atualiza os três valores exibidos no rodapé. */
   public update(balance: number, bet: number, win: number): void {
     if (!this.digitsReady) {
       return;
@@ -93,6 +96,7 @@ export class BalancePanel {
     this.winDisplay.setText(this.formatWin(safeWin));
   }
 
+  /** Tamanho do grupo para posicionar no layout da cena. */
   public getSize(): { width: number; height: number } {
     const bounds = this.valuesGroup.getLocalBounds();
     const width = bounds.width * this.valuesGroup.scale.x;
@@ -100,6 +104,7 @@ export class BalancePanel {
     return { width, height };
   }
 
+  /** Escala todo o painel (usado no resize da GameScene). */
   public setGroupScale(scale: number): void {
     this.valuesGroup.scale.set(scale);
   }

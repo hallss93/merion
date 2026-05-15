@@ -1,5 +1,6 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 
+/** Renderiza um texto usando sprites de dígitos (0–9 e vírgula). */
 export class ImageNumberDisplay {
   public readonly container = new Container();
   private textureMap: Record<string, Texture>;
@@ -20,14 +21,17 @@ export class ImageNumberDisplay {
     this.commaLeftShift = commaLeftShift;
   }
 
+  /** Define o mapa caractere → textura dos dígitos. */
   public setTextureMap(textureMap: Record<string, Texture>): void {
     this.textureMap = textureMap;
   }
 
+  /** Exibe um número com duas casas decimais. */
   public setValue(value: number): void {
     this.setText(value.toFixed(2).replace('.', ','));
   }
 
+  /** Monta a string caractere a caractere com os sprites. */
   public setText(text: string): void {
     const chars = text.split('');
     this.ensureSpritePool(chars.length);

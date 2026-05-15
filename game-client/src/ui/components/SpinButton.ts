@@ -1,5 +1,6 @@
 import { Assets, Container, Sprite, Texture } from 'pixi.js';
 
+/** Botão SPIN com feedback visual de hover e clique. */
 export class SpinButton {
   public readonly container = new Container();
   private readonly spinSprite = new Sprite(Texture.EMPTY);
@@ -39,10 +40,12 @@ export class SpinButton {
     });
   }
 
+  /** Registra o callback do giro. */
   public onClick(handler: () => void): void {
     this.clickHandler = handler;
   }
 
+  /** Habilita ou desabilita o botão. */
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
@@ -50,6 +53,7 @@ export class SpinButton {
     this.spinSprite.eventMode = enabled ? 'static' : 'none';
   }
 
+  /** Carrega a textura do botão spin. */
   public async ensureAssets(): Promise<void> {
     if (this.assetsReady) {
       return;

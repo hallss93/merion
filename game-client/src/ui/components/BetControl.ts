@@ -1,5 +1,6 @@
 import { Assets, Container, Sprite, Texture } from 'pixi.js';
 
+/** Botão único: metade superior aumenta aposta, inferior diminui. */
 export class BetControl {
   public readonly container = new Container();
   private readonly controlSprite = new Sprite(Texture.EMPTY);
@@ -49,10 +50,12 @@ export class BetControl {
     });
   }
 
+  /** Callback ao tocar na metade de cima. */
   public onIncrease(handler: () => void): void {
     this.onIncreaseHandler = handler;
   }
 
+  /** Callback ao tocar na metade de baixo. */
   public onDecrease(handler: () => void): void {
     this.onDecreaseHandler = handler;
   }
@@ -63,6 +66,7 @@ export class BetControl {
     }
   }
 
+  /** Habilita ou desabilita cliques e opacidade. */
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     this.container.alpha = enabled ? 1 : 0.5;
@@ -70,6 +74,7 @@ export class BetControl {
     this.hitAreaSprite.eventMode = enabled ? 'static' : 'none';
   }
 
+  /** Carrega a textura do controle cima/baixo. */
   public async ensureAssets(): Promise<void> {
     if (this.assetsReady) {
       return;

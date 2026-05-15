@@ -19,6 +19,7 @@ import type { SlotState } from '../state/SlotStore';
 import type { SlotPhase, SpinResult } from '../domain/slot/SlotTypes';
 import { shouldIgnoreKeyboardShortcut } from '../utils/a11y';
 
+/** Cena principal do slot: rolos, HUD, giro e animações de vitória. */
 export class GameScene implements IScene {
   public readonly container = new Container();
   private readonly backgroundSprite = new Sprite(Texture.EMPTY);
@@ -85,6 +86,7 @@ export class GameScene implements IScene {
     this.bindStore();
   }
 
+  /** Carrega texturas, HUD e ativa atalhos de teclado. */
   public onEnter(): void {
     this.container.visible = true;
     this.hudContainer.visible = true;
@@ -106,6 +108,7 @@ export class GameScene implements IScene {
     void this.loadMainGameTexture();
   }
 
+  /** Limpa timers, animações e listeners ao sair da cena. */
   public onExit(): void {
     globalThis.window.removeEventListener('keydown', this.onGlobalKeydown);
     this.clearAllWinTimers();
@@ -125,6 +128,7 @@ export class GameScene implements IScene {
     this.container.visible = false;
   }
 
+  /** Reposiciona fundo, rolos, raposa, overlay e HUD. */
   public resize(width: number, height: number): void {
     this.lastWidth = width;
     this.lastHeight = height;
@@ -143,12 +147,14 @@ export class GameScene implements IScene {
     this.layoutHud(width, height);
   }
 
+  /** Baixa a imagem de fundo da mesa se ainda não estiver em cache. */
   private async loadMainGameTexture(): Promise<void> {
     const texture = await Assets.load<Texture>('main_game_screen');
     this.backgroundSprite.texture = texture;
     this.resize(this.lastWidth, this.lastHeight);
   }
 
+  /** Carrega frames dos símbolos e monta a grade 6×5. */
   private async ensureReelSymbols(): Promise<void> {
     const symbolDefinitions = this.getActiveSymbolDefinitions();
     const nextMode: 'objects' | 'coins' = this.isCoinRoute() ? 'coins' : 'objects';
@@ -172,6 +178,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Lista URLs dos frames PNG de um símbolo. */
   private buildSymbolUrls(symbol: SymbolDefinition): string[] {
     const urls: string[] = [];
     for (let i = 0; i <= 45; i += 1) {
@@ -183,6 +190,7 @@ export class GameScene implements IScene {
     return urls;
   }
 
+  /** Lista URLs dos frames da animação Big Win. */
   private buildBigWinUrls(): string[] {
     const urls: string[] = [];
     for (let i = 0; i <= 45; i += 1) {
@@ -192,6 +200,7 @@ export class GameScene implements IScene {
     return urls;
   }
 
+  /** Atribui texturas aos sprites da grade (aleatório ou ordem fixa). */
   private createOrUpdateReelGrid(
     symbolDefinitions: SymbolDefinition[],
     randomizeOrder: boolean,
@@ -227,6 +236,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Garante 30 sprites (5×6), criando ou removendo do pool. */
   private ensureReelSpritePool(targetCount: number): void {
     while (this.reelSprites.length < targetCount) {
       const sprite = new AnimatedSprite([Texture.EMPTY]);
@@ -246,6 +256,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Retorna frames do símbolo com cache por pasta. */
   private getSymbolTextures(symbol: SymbolDefinition): Texture[] {
     const cacheKey = `${this.getSequenceGroupFolder()}/${symbol.folder}`;
     const cached = this.symbolTextureCache.get(cacheKey);
@@ -260,6 +271,7 @@ export class GameScene implements IScene {
     return textures;
   }
 
+  /** Posiciona cada célula da grade sobre o fundo da mesa. */
   private layoutReels(): void {
     if (this.reelSprites.length === 0) {
       return;
@@ -300,18 +312,22 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Pasta de assets: Objects ou Coins conforme a URL. */
   private getSequenceGroupFolder(): 'Objects' | 'Coins' {
     return this.isCoinRoute() ? 'Coins' : 'Objects';
   }
 
+  /** Lista de símbolos usada no giro (objetos ou moedas). */
   private getActiveSymbolDefinitions(): SymbolDefinition[] {
     return this.isCoinRoute() ? COIN_SYMBOL_DEFINITIONS : OBJECT_SYMBOL_DEFINITIONS;
   }
 
+  /** True quando a rota da página contém /coins. */
   private isCoinRoute(): boolean {
     return globalThis.location.pathname.toLowerCase().includes('/coins');
   }
 
+  /** Instancia a raposa Spine ao lado da mesa, se ainda não existir. */
   private ensureFoxSpine(): void {
     if (this.foxSpine) {
       return;
@@ -334,6 +350,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Escala e posiciona a raposa conforme o tamanho da tela. */
   private positionFox(width: number, height: number): void {
     if (!this.foxSpine) {
       return;
@@ -356,6 +373,7 @@ export class GameScene implements IScene {
     this.foxSpine.position.set(foxX, foxY);
   }
 
+  /** Carrega e prepara o sprite animado do overlay Big Win. */
   private async ensureBigWinAnimation(): Promise<void> {
     if (this.bigWinSprite) {
       return;
@@ -382,6 +400,7 @@ export class GameScene implements IScene {
     this.layoutBigWin(this.lastWidth, this.lastHeight);
   }
 
+  /** Centraliza o escurecimento e a animação de vitória na tela. */
   private layoutBigWin(width: number, height: number): void {
     this.bigWinDim.width = width;
     this.bigWinDim.height = height;
@@ -403,6 +422,7 @@ export class GameScene implements IScene {
     );
   }
 
+  /** Exibe um estágio: 0 = Big Win sprite; 1+ = Spine (Mega/Super/Total). */
   private async showWinStage(stageIndex: number): Promise<void> {
     if (stageIndex === 0) {
       this.showBigWin();
@@ -416,6 +436,7 @@ export class GameScene implements IScene {
     await this.showSpineWin(definition.skeleton, definition.atlas, definition.animation);
   }
 
+  /** Mostra a animação sprite de vitória pequena/grande. */
   private showBigWin(): void {
     if (!this.bigWinSprite) {
       return;
@@ -427,6 +448,7 @@ export class GameScene implements IScene {
     this.layoutBigWin(this.lastWidth, this.lastHeight);
   }
 
+  /** Pré-carrega JSON/atlas das animações Spine de vitória. */
   private async preloadSpineWinAssets(): Promise<void> {
     const urls = SPINE_WIN_DEFINITIONS.flatMap((definition) => [
       definition.skeleton,
@@ -435,6 +457,7 @@ export class GameScene implements IScene {
     await Assets.load(urls);
   }
 
+  /** Troca o overlay para uma animação Spine (Mega, Super Mega, Total). */
   private async showSpineWin(skeleton: string, atlas: string, animation: string): Promise<void> {
     if (this.bigWinSprite) {
       this.bigWinSprite.stop();
@@ -468,6 +491,7 @@ export class GameScene implements IScene {
     this.layoutBigWin(this.lastWidth, this.lastHeight);
   }
 
+  /** Remove a instância Spine ativa do overlay. */
   private disposeActiveSpineWin(): void {
     if (!this.activeSpineWin) {
       return;
@@ -476,6 +500,7 @@ export class GameScene implements IScene {
     this.activeSpineWin = null;
   }
 
+  /** Interrompe overlay de vitória e marca skip para o jogador. */
   private clearAllWinTimers(): void {
     this.shouldSkipWinFeedback = true;
     this.bigWinOverlay.visible = false;
@@ -486,6 +511,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Monta HUD e liga botões ao SlotStore e ao giro. */
   private setupHud(): void {
     this.hudContainer.addChild(this.balancePanel.container);
     this.hudContainer.addChild(this.mainButtonContainer);
@@ -506,6 +532,7 @@ export class GameScene implements IScene {
     });
   }
 
+  /** Inscreve a UI para atualizar quando o estado do slot mudar. */
   private bindStore(): void {
     if (this.unsubscribeStore) {
       return;
@@ -515,6 +542,7 @@ export class GameScene implements IScene {
     });
   }
 
+  /** Atualiza saldo/aposta/ganho e habilita ou desabilita controles. */
   private refreshHudFromState(state: SlotState): void {
     const currentBet = state.betOptions[state.betIndex] ?? 0;
     this.balancePanel.update(state.balance, currentBet, state.lastWin);
@@ -526,6 +554,7 @@ export class GameScene implements IScene {
     this.updateScreenReaderSummary(state);
   }
 
+  /** Posiciona painel de saldo e botões no rodapé. */
   private layoutHud(width: number, height: number): void {
     this.balancePanel.setGroupScale(0.9);
     const balanceSize = this.balancePanel.getSize();
@@ -553,6 +582,7 @@ export class GameScene implements IScene {
     );
   }
 
+  /** Traduz a fase do slot para texto do leitor de tela. */
   private formatPhaseForScreenReader(phase: SlotPhase): string {
     switch (phase) {
       case 'idle':
@@ -570,6 +600,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Atualiza região ARIA com saldo, aposta e dica de ação. */
   private updateScreenReaderSummary(state: SlotState): void {
     const region = document.getElementById('merion-game-status');
     if (!region) {
@@ -594,6 +625,7 @@ export class GameScene implements IScene {
     region.textContent = `Saldo ${state.balance}. Aposta ${bet}. Último ganho: ${state.lastWin}. Estado: ${phaseLabel}.${actionHint}`;
   }
 
+  /** Fluxo completo do giro: debitar, sortear, animar, vitória e creditar. */
   private async handleSpinClick(): Promise<void> {
     if (this.spinInputLocked) {
       return;
@@ -640,6 +672,7 @@ export class GameScene implements IScene {
     this.refreshHudFromState(this.slotStore.getSnapshot());
   }
 
+  /** Aplica a matriz final nos sprites dos rolos. */
   private applySpinResult(result: SpinResult): void {
     const rows = Math.min(result.matrix.length, GAME_SCENE_CONFIG.reel.rows);
     for (let row = 0; row < rows; row += 1) {
@@ -664,6 +697,7 @@ export class GameScene implements IScene {
     this.layoutReels();
   }
 
+  /** Animação do giro: colunas giram e param uma a uma com o resultado. */
   private async playSpinByColumns(
     symbolDefinitions: SymbolDefinition[],
     finalMatrix: SymbolDefinition[][],
@@ -692,6 +726,7 @@ export class GameScene implements IScene {
     this.layoutReels();
   }
 
+  /** Símbolos aleatórios em loop enquanto a coluna “gira”. */
   private startColumnSpin(column: number, symbolDefinitions: SymbolDefinition[]): void {
     for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
       const sprite = this.getReelSprite(row, column);
@@ -712,6 +747,7 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Para a coluna nos símbolos definitivos do SpinEngine. */
   private stopColumnWithFinalResult(column: number, finalMatrix: SymbolDefinition[][]): void {
     for (let row = 0; row < GAME_SCENE_CONFIG.reel.rows; row += 1) {
       const sprite = this.getReelSprite(row, column);
@@ -735,11 +771,13 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Sprite da célula (fileira, coluna) na grade. */
   private getReelSprite(row: number, column: number): AnimatedSprite | null {
     const index = row * GAME_SCENE_CONFIG.reel.columns + column;
     return this.reelSprites[index] ?? null;
   }
 
+  /** Aguarda N ms (usado entre colunas e estágios de vitória). */
   private async waitMs(ms: number): Promise<void> {
     await new Promise<void>((resolve) => {
       const timeoutId = globalThis.setTimeout(() => {
@@ -753,6 +791,7 @@ export class GameScene implements IScene {
     });
   }
 
+  /** Carrega texturas do HUD (saldo, aposta, botões). */
   private async ensureHudAssets(): Promise<void> {
     await Promise.all([
       this.balancePanel.ensureAssets(),
@@ -764,6 +803,7 @@ export class GameScene implements IScene {
     this.refreshHudFromState(this.slotStore.getSnapshot());
   }
 
+  /** Embaralha símbolos na grade (só em idle). */
   private handleReloadClick(): void {
     if (this.slotStore.getSnapshot().phase !== 'idle') {
       return;
@@ -772,6 +812,7 @@ export class GameScene implements IScene {
     this.layoutReels();
   }
 
+  /** Cancela timeouts pendentes da animação do giro. */
   private clearSpinTimers(): void {
     for (const timeoutId of this.spinTimeoutIds) {
       globalThis.clearTimeout(timeoutId);
@@ -779,6 +820,7 @@ export class GameScene implements IScene {
     this.spinTimeoutIds.length = 0;
   }
 
+  /** Sequência de animações de vitória conforme o valor ganho. */
   private async playWinFeedback(totalWin: number): Promise<void> {
     const stageIndices = this.getWinStageIndices(totalWin);
     if (stageIndices.length === 0) {
@@ -805,10 +847,12 @@ export class GameScene implements IScene {
     }
   }
 
+  /** Delega ao winOverlayStages quais estágios exibir. */
   private getWinStageIndices(totalWin: number): number[] {
     return computeWinStageIndices(totalWin, GAME_SCENE_CONFIG.winOverlay.amountThresholds);
   }
 
+  /** Log no console para debug (matriz, linhas vencedoras, ganho). */
   private logRound(payload: { bet: number; result: SpinResult }): void {
     const { bet, result } = payload;
     console.info('[slot-round]', {

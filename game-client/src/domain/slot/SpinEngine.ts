@@ -11,6 +11,7 @@ interface SpinParams {
   columns: number;
 }
 
+/** Gera a grade do giro e calcula ganhos nas paylines. */
 export class SpinEngine {
   private readonly rng = new Rng();
   private readonly rngMode: RngMode;
@@ -19,6 +20,7 @@ export class SpinEngine {
     this.rngMode = rngMode;
   }
 
+  /** Executa um giro completo: sorteia grade, avalia linhas e soma o ganho. */
   public spin(params: SpinParams): SpinResult {
     const matrix = this.buildMatrix(params.symbols, params.rows, params.columns);
     const wins = this.evaluateRows(matrix, params.bet);
@@ -33,6 +35,7 @@ export class SpinEngine {
     };
   }
 
+  /** Preenche cada célula com um símbolo sorteado pelo Rng. */
   private buildMatrix(
     symbols: SymbolDefinition[],
     rows: number,
@@ -51,6 +54,7 @@ export class SpinEngine {
     return matrix;
   }
 
+  /** Verifica as 10 paylines e retorna só as que pagaram (aposta × multiplicador). */
   private evaluateRows(matrix: SymbolDefinition[][], bet: number): LineWin[] {
     const wins: LineWin[] = [];
 

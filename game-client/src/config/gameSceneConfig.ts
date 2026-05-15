@@ -1,14 +1,17 @@
+/** Liga o nome do símbolo na paytable ao prefixo dos frames de arte. */
 export interface SymbolDefinition {
   folder: string;
   prefix: string;
 }
 
+/** Referência a uma animação Spine de vitória. */
 export interface SpineWinDefinition {
   skeleton: string;
   atlas: string;
   animation: string;
 }
 
+/** Posições, velocidades e limiares da cena principal do slot. */
 export const GAME_SCENE_CONFIG = {
   animationSpeedMultiplier: 1.35,
   spineSpeedMultiplier: 1.25,
@@ -48,6 +51,7 @@ export const GAME_SCENE_CONFIG = {
   },
 } as const;
 
+/** Símbolos do tema assalto (rota padrão). */
 export const OBJECT_SYMBOL_DEFINITIONS: SymbolDefinition[] = [
   { folder: 'Bank', prefix: 'Bank_' },
   { folder: 'Cell', prefix: 'Cell_' },
@@ -61,6 +65,7 @@ export const OBJECT_SYMBOL_DEFINITIONS: SymbolDefinition[] = [
   { folder: 'Safe', prefix: 'Safe_' },
 ];
 
+/** Símbolos de moedas (rota /coins). */
 export const COIN_SYMBOL_DEFINITIONS: SymbolDefinition[] = [
   { folder: 'Bronze_coin_1', prefix: 'Bronze_coin_1_' },
   { folder: 'Bronze_coin_2', prefix: 'Bronze_coin_2_' },
@@ -76,6 +81,7 @@ export const COIN_SYMBOL_DEFINITIONS: SymbolDefinition[] = [
   { folder: 'Golden_coin_4', prefix: 'Golden_coin_4_' },
 ];
 
+/** Animações Spine: Mega Win, Super Mega Win e Total Win. */
 export const SPINE_WIN_DEFINITIONS: readonly SpineWinDefinition[] = [
   {
     skeleton: '/assets/spine/Mega_Win/Mega_Win.json',

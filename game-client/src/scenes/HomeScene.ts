@@ -7,6 +7,7 @@ import type { AnimatedSprite } from 'pixi.js';
 
 type HomeState = 'loading' | 'idle' | 'interacting' | 'transition';
 
+/** Cena inicial com personagem e botão Start (fluxo de demonstração). */
 export class HomeScene implements IScene {
   public readonly container = new Container();
   private readonly view: HomeView;
@@ -50,6 +51,7 @@ export class HomeScene implements IScene {
     this.view.resize(width, height);
   }
 
+  /** Clique em Start: som, animação win e fluxo de transição. */
   private handleStart(): void {
     if (this.state !== 'idle') {
       return;
@@ -61,6 +63,7 @@ export class HomeScene implements IScene {
     this.beginTransitionFlow();
   }
 
+  /** Atualiza UI conforme loading, idle, interacting ou transition. */
   private setState(nextState: HomeState): void {
     this.state = nextState;
 
@@ -90,6 +93,7 @@ export class HomeScene implements IScene {
     }
   }
 
+  /** Sequência curta de overlay + efeito de moeda antes de voltar ao idle. */
   private beginTransitionFlow(): void {
     globalThis.setTimeout(() => {
       this.setState('transition');
@@ -101,6 +105,7 @@ export class HomeScene implements IScene {
     }, 350);
   }
 
+  /** Cria sprites da raposa e da moeda se ainda não existirem. */
   private ensureSprites(): void {
     if (!this.foxIdleSprite) {
       this.foxIdleSprite = this.animationService.createSequenceSprite('fox_idle', {
@@ -124,6 +129,7 @@ export class HomeScene implements IScene {
     }
   }
 
+  /** Exibe animação idle da raposa. */
   private showIdleCharacter(): void {
     if (!this.foxIdleSprite) {
       return;
@@ -133,6 +139,7 @@ export class HomeScene implements IScene {
     this.animationService.play(this.foxIdleSprite);
   }
 
+  /** Exibe animação de vitória da raposa ao clicar Start. */
   private showWinCharacter(): void {
     if (!this.foxWinSprite) {
       return;
@@ -142,6 +149,7 @@ export class HomeScene implements IScene {
     this.animationService.play(this.foxWinSprite);
   }
 
+  /** Mostra efeito de moeda no overlay de transição. */
   private showCoinFx(): void {
     if (!this.coinFxSprite) {
       return;
@@ -151,6 +159,7 @@ export class HomeScene implements IScene {
     this.animationService.play(this.coinFxSprite);
   }
 
+  /** Remove efeito de moeda do overlay. */
   private hideCoinFx(): void {
     if (this.coinFxSprite) {
       this.animationService.stop(this.coinFxSprite);
